@@ -22,6 +22,32 @@ def get_connection():
         host=DB_HOST,
         port=DB_PORT
     )
+    
+def get_token():
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT token
+            FROM bot_token
+            ORDER BY saved_at DESC
+            LIMIT 1
+        """)
+        result = cursor.fetchone()
+
+        if result:
+            return result[0]  # 토큰 문자열
+        else:
+            print("⚠️ 저장된 봇 토큰이 없습니다.")
+            return None
+
+    except Exception as e:
+        print("❌ 봇 토큰 조회 실패:", e)
+        return None
+    finally:
+        conn.close()
+
 
 def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str, referral: str, bio: str):
     """
@@ -115,3 +141,4 @@ def delete_profile(user_id: int):
         print(f"❌ 프로필 삭제 실패: {e}")
     finally:
         conn.close()
+        

@@ -3,6 +3,8 @@ from discord.ext import commands
 from discord import Activity, ActivityType
 from profile_setting import send_profile_embed
 from slash_command import register_slash_commands
+from utils.function import get_token
+
 intents = discord.Intents.default()
 intents.messages = True
 intents.guilds = True
@@ -83,5 +85,5 @@ async def on_member_remove(member: discord.Member):
         print(f"❌ 프로필 삭제 실패: {e}")
 
 # 봇 토큰 입력
-bot.run('MTM4NDQzNjQ1MTI2NDk1ODU2NQ.GGrvJz.72ZVIcRfmny3gOf2wRU9DlGKNlSZ4QlaszNdCA')
+bot.run(get_token())
 
