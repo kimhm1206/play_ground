@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import Activity, ActivityType
 from profile_setting import send_profile_embed
 from slash_command import register_slash_commands
+from ticket import send_ticket_message
 from utils.function import get_token
 
 intents = discord.Intents.default()
@@ -21,6 +22,7 @@ async def on_ready():
     await bot.sync_commands()
     
     await send_profile_embed(bot)
+    await send_ticket_message(bot)
     await bot.change_presence(activity=Activity(
         type=ActivityType.playing,  # 또는 watching, listening 등
         name="📝 PLAY GROUND 전용 Moly 입니다!"))

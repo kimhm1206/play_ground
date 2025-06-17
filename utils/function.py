@@ -142,3 +142,17 @@ def delete_profile(user_id: int):
     finally:
         conn.close()
         
+
+def log_ticket(user_id: int, nickname: str, category: str, target: str, thread_id: int):
+    try:
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO ticket_logs (user_id, nickname, category, target, thread_id)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (user_id, nickname, category, target, thread_id))
+        conn.commit()
+    except Exception as e:
+        print(f"❌ 문의 로그 저장 실패: {e}")
+    finally:
+        conn.close()
