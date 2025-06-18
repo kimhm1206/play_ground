@@ -333,7 +333,7 @@ class ProfileModal(discord.ui.Modal):
                 embed.add_field(name="자주 하는 게임", value=f"**{self.games.value.strip() or '없음'}**", inline=False)
                 embed.add_field(name="하고 싶은 게임", value=f"**{self.wanted.value.strip() or '없음'}**", inline=False)
                 embed.add_field(name="가입 경로", value=f"**{self.referral.value.strip()}**", inline=False)
-                embed.add_field(name="한줄 소개", value=f"```{self.bio.value.strip()}```", inline=False)
+                embed.add_field(name="한줄 소개", value=f"``{self.bio.value.strip()}``", inline=False)
                 embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
                 await channel.send(content=f"🎊 새로운 맴버 **{interaction.user.mention}** 님이 들어오셨어요!", embed=embed)
