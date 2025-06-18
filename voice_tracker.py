@@ -12,18 +12,47 @@ class VoiceTracker(commands.Cog):
         self.bot = bot
         self.voice_joins: dict[int, datetime] = {}
 
+
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         user_id = member.id
+
+        # 입장 시 기록
         if before.channel is None and after.channel is not None:
             self.voice_joins[user_id] = datetime.utcnow()
+
+        # 퇴장 시 처리
         elif before.channel is not None and after.channel is None:
             joined_at = self.voice_joins.pop(user_id, None)
+
+            # 🔄 레벨 처리
             if joined_at:
                 minutes = int((datetime.utcnow() - joined_at).total_seconds() // 60)
                 if minutes >= 1:
                     result = await update_user_leaderboard(user_id, minutes, self.bot)
                     print(f"[레벨 시스템] {member.display_name} → {result['message']}")
+
+            if before.channel.id != 1384965457911480340:
+    
+                real_members = [m for m in before.channel.members if not m.bot]
+                if len(real_members) == 0:
+                    try:
+                        print('try')
+                        await before.channel.delete()
+                        print(f"[자동삭제] 빈 음성 채널 '{before.channel.name}' 삭제됨.")
+                    except Exception as e:
+                        print(f"[에러] 음성 채널 삭제 실패: {e}")
+
+        elif before.channel != after.channel:
+          
+            if before.channel and before.channel.id != 1384965457911480340:
+                real_members = [m for m in before.channel.members if not m.bot]
+                if len(real_members) == 0:
+                    try:
+                        await before.channel.delete()
+                        print(f"[자동삭제] 유저 이동 후 빈 채널 '{before.channel.name}' 삭제됨.")
+                    except Exception as e:
+                        print(f"[에러] 음성 채널 삭제 실패: {e}")
 
 
 async def update_user_leaderboard(user_id, minutes_to_add, bot: commands.Bot):

@@ -98,7 +98,7 @@ async def send_profile_embed(bot):
     # Embed 구성
     embed = discord.Embed(
         title="🎯 프로필 설정 메뉴",
-        description="프로필 설정 전 반드시 규칙을 읽고✅ 반응을 눌러주세요!! \n원하는 항목을 선택하여 설정을 진행해보세요!",
+        description="프로필 설정 버튼을 클릭해 짧은 설문에 응답 해주세요. \n설정을 완료하지 않으면 활동 채널이 보이지 않습니다!",
         color=discord.Color.blurple()
     )
     embed.set_footer(text="모든 설정은 언제든지 다시 변경할 수 있어요 ✨")
@@ -287,31 +287,10 @@ class ProfileModal(discord.ui.Modal):
         # 🎖️ 역할 부여 (ID: 1384442724580720680)
         role = interaction.guild.get_role(1384442724580720680)
         if role:
-            try:
-                # ✅ 해당 유저가 지정 메시지에 ✅ 반응을 이미 눌렀는지 확인
-                TARGET_MESSAGE_ID = 1384421415503269898
-                TARGET_EMOJI = "✅"
-
-                # 메시지 객체 가져오기
-                channel = interaction.guild.get_channel(1384416674521939998)  # 메시지가 있는 채널 ID를 지정해도 됨
-                try:
-                    message = await channel.fetch_message(TARGET_MESSAGE_ID)
-                    for reaction in message.reactions:
-                        if str(reaction.emoji) == TARGET_EMOJI:
-                            users = await reaction.users().flatten()
-                            if interaction.user in users:
-                                await interaction.user.add_roles(role, reason="프로필 설정 + ✅ 반응 확인")
-                                break
-                except Exception as e:
-                    print(f"❌ 메시지 확인 중 오류: {e}")
-
-            except discord.Forbidden:
-                print(f"❌ 역할 부여 실패: 봇 권한 부족")
-        else:
-            print("❌ 역할을 찾을 수 없습니다.")
+            await interaction.user.add_roles(role, reason="프로필 설정")
 
         await interaction.response.send_message(
-            f"✅ `{self.nickname}` 님의 프로필이 성공적으로 설정되었습니다! \n채팅방이 보이지 않는 다면 규칙을 읽고 ✅ 이모지를 눌러주세요.",
+            f"✅ `{self.nickname}` 님의 프로필이 성공적으로 설정되었습니다!",
             ephemeral=True, delete_after=10
             )
             

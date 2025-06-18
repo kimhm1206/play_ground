@@ -48,7 +48,6 @@ def register_slash_commands(bot: commands.Bot):
         ctx: discord.ApplicationContext,
         text: discord.Option(str, "전달할 메시지를 입력하세요")  # type: ignore
     ):
-
         # ✅ DB 저장
         nickname = ctx.user.nick or ctx.user.name
         user_id = ctx.user.id
@@ -57,12 +56,16 @@ def register_slash_commands(bot: commands.Bot):
         except Exception as e:
             print("DB 저장 실패:", e)
 
-        # ✅ 익명 메시지 웹훅 전송
         try:
-            requests.post(WEBHOOK_URL, json={"content": f"\n{text}"})
+            channel = ctx.guild.get_channel(1384527567280930859)
+            if channel:
+                await channel.send(f"\n{text}")
+            else:
+                await ctx.respond("❌ 채널을 찾을 수 없어요!", ephemeral=True, delete_after=3)
+                return
         except Exception as e:
             await ctx.respond("❌ 익명 메시지 전송에 실패했어요!", ephemeral=True, delete_after=3)
-            print("웹훅 오류:", e)
+            print("메시지 전송 오류:", e)
             return
 
         # ✅ 유저에게는 삭제되는 응답
@@ -99,7 +102,7 @@ def register_slash_commands(bot: commands.Bot):
 
         if rank:
             await ctx.respond(
-                f"🎖️ 당신의 순위는 **{rank}위**입니다!\n"
+                f"🎖️ {member.nick or member.name} 순위는 **{rank}위**입니다!\n"
                 f"📊 레벨 **{level}**, 경험치 **{percent}%** 진행 중이에요!"
             )
         else:
