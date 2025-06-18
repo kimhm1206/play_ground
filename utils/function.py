@@ -68,7 +68,8 @@ def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str
                 referral = EXCLUDED.referral,
                 bio = EXCLUDED.bio;
         """, (user_id, mbti.strip(), favorite_games.strip(), wanted_games.strip(), referral.strip(), bio.strip()))
-
+        
+        cursor.execute("INSERT INTO voice_leaderboard (user_id) VALUES (%s) ON CONFLICT DO NOTHING;", (user_id,))
         conn.commit()
         return True
     except Exception as e:
@@ -136,6 +137,7 @@ def delete_profile(user_id: int):
         cursor = conn.cursor()
 
         cursor.execute("DELETE FROM user_profiles WHERE user_id = %s", (user_id,))
+        cursor.execute("DELETE FROM voice_leaderboard WHERE user_id = %s;", (user_id,))
         conn.commit()
     except Exception as e:
         print(f"❌ 프로필 삭제 실패: {e}")

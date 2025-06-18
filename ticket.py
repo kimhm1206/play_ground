@@ -132,6 +132,22 @@ class InquiryConfirmView(View):
             target=self.target,
             thread_id=thread.id
         )
+        
+        mention_roles = []
+        if self.target == "전체 스탭":
+            mention_roles = [guild.get_role(STAFF_ROLE_ID), guild.get_role(ADMIN_ROLE_ID)]
+        elif self.target == "관리자만":
+            mention_roles = [guild.get_role(ADMIN_ROLE_ID)]
+
+        mention_str = ' '.join(role.mention for role in mention_roles if role)
+
+        start_embed = discord.Embed(
+            title=f"📨 {self.inquiry_type} 문의가 시작되었습니다",
+            description="문의가 접수되었습니다.\n필요 시 아래 종료 버튼을 눌러주세요.",
+            color=discord.Color.gold()
+        )
+
+        await thread.send(content=f"{mention_str} {member.mention}", embed=start_embed, view=CloseThreadView(thread, member))
 
         await interaction.response.edit_message(
             embed=discord.Embed(
@@ -174,3 +190,66 @@ async def send_ticket_message(bot: commands.Bot):
     )
 
     await channel.send(embed=embed, view=InquiryTypeView(bot))
+    
+    
+# --- 1. ConfirmView: 종료 확인 단계 ---
+class CloseConfirmView(View):
+    def __init__(self, thread: discord.TextChannel, member: discord.Member):
+        super().__init__(timeout=60)
+        self.thread = thread
+        self.member = member
+
+    @discord.ui.button(label="✅ 확인", style=discord.ButtonStyle.success)
+    async def confirm(self, button: Button, interaction: discord.Interaction):
+        try:
+            await self.thread.set_permissions(self.member, overwrite=None)  # 유저 내보내기
+            await self.thread.edit(name=f"종료된-{self.thread.name}")
+        except Exception as e:
+            await interaction.response.send_message("❌ 유저 추방 또는 이름 변경 중 오류 발생", ephemeral=True)
+            return
+
+        # 관리자용 삭제 버튼 Embed 전송
+        embed = discord.Embed(
+            title="🗑️ 종료된 상담입니다.",
+            description="삭제하시겠습니까?",
+            color=discord.Color.red()
+        )
+        await self.thread.send(embed=embed, view=ThreadDeleteView())
+
+        await interaction.response.edit_message(
+            embed=discord.Embed(description="🔒 문의가 종료되었습니다.", color=discord.Color.green()),
+            view=None
+        )
+
+    @discord.ui.button(label="❌ 취소", style=discord.ButtonStyle.danger)
+    async def cancel(self, button: Button, interaction: discord.Interaction):
+        await interaction.response.edit_message(
+            embed=discord.Embed(description="종료 요청이 취소되었습니다.", color=discord.Color.greyple()),
+            view=None
+        )
+
+# --- 2. DeleteView: 관리자용 삭제 버튼 ---
+class ThreadDeleteView(View):
+    def __init__(self):
+        super().__init__(timeout=300)
+
+    @discord.ui.button(label="🗑️ 삭제", style=discord.ButtonStyle.danger)
+    async def delete_thread(self, button: Button, interaction: discord.Interaction):
+        await interaction.response.defer()
+        await interaction.channel.delete()
+
+# --- 3. Close 버튼: 스레드 내 기본 메시지에 포함될 종료 버튼 ---
+class CloseThreadView(View):
+    def __init__(self, thread: discord.TextChannel, member: discord.Member):
+        super().__init__(timeout=None)
+        self.thread = thread
+        self.member = member
+
+    @discord.ui.button(label="🔚 문의 종료", style=discord.ButtonStyle.danger)
+    async def close(self, button: Button, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="정말 문의를 종료하시겠습니까?",
+            description="종료된 후에는 다시 열 수 없습니다.",
+            color=discord.Color.orange()
+        )
+        await interaction.response.send_message(embed=embed, view=CloseConfirmView(self.thread, self.member), ephemeral=True)

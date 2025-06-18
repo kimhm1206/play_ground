@@ -1,9 +1,10 @@
 import discord
 import requests
 from discord.ext import commands
-from utils.function import get_profile , save_anonymous_log
+from utils.function import get_profile , save_anonymous_log, get_connection
 
-
+DAILY_LIMIT = 360
+LEVEL_UNIT = 30
 WEBHOOK_URL = "https://discord.com/api/webhooks/1384529950782263408/2mIMMUVH790rezgL432Q4GWyssoL9WcBZxP9lrJNvtEfmRHrxoIPEYABnM_Gar-ljGg8"
 TARGET_CHANNEL_ID = 1384527567280930859
 # 메인 봇 객체가 있는 곳에서 불러올 예정이므로 Cog 사용 X
@@ -49,7 +50,7 @@ def register_slash_commands(bot: commands.Bot):
     ):
 
         # ✅ DB 저장
-        nickname = ctx.user.nick
+        nickname = ctx.user.nick or ctx.user.name
         user_id = ctx.user.id
         try:
             save_anonymous_log(user_id=user_id, nickname=nickname, message=text)
@@ -66,3 +67,42 @@ def register_slash_commands(bot: commands.Bot):
 
         # ✅ 유저에게는 삭제되는 응답
         await ctx.respond("✅ 익명 메시지를 보냈습니다.", ephemeral=True, delete_after=1)
+
+    @bot.slash_command(
+            name="리더보드",
+            description="현재 나의 레벨과 전체 순위를 확인합니다."
+        )
+    async def check_rank(
+        ctx: discord.ApplicationContext,
+        member: discord.Member
+    ):
+        user_id = member.id
+
+        # DB에서 순위 정보 조회
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            SELECT user_id, level, total_minutes
+            FROM voice_leaderboard
+            ORDER BY level DESC, total_minutes DESC
+        """)
+        all_users = cur.fetchall()
+        conn.close()
+
+        # 순위 찾기
+        rank = None
+        for i, (uid, level, total) in enumerate(all_users, start=1):
+            if uid == user_id:
+                percent = int((total / (level * LEVEL_UNIT)) * 100) if level > 0 else 0
+                rank = i
+                break
+
+        if rank:
+            await ctx.respond(
+                f"🎖️ 당신의 순위는 **{rank}위**입니다!\n"
+                f"📊 레벨 **{level}**, 경험치 **{percent}%** 진행 중이에요!"
+            )
+        else:
+            await ctx.respond(
+                "🔍 아직 순위에 등록되지 않았어요.\n(음성 채널에서 1분 이상 활동해야 등록됩니다!)"
+            )

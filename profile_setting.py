@@ -4,7 +4,7 @@ import re
 from utils.function import *
 
 COLOR_EMOJI_MAP = {
-    "WHITE": "⚪", "GRAY": "⬜", "DARK": "⬛",
+    "WHITE": "⚪", "GRAY": "⬜", "BLACK": "⬛",
     "RED": "🔴", "PINK": "🌸",  "PINK2": "🩷","PINK3": "🎀",
     "ORANGE": "🟠", "BROWN": "🟤", "YELLOW": "🟡", "YELLOW2": "🌕",
     "GREEN": "🟢", "GREEN2": "🍀", "GREEN3": "🌱","SKY": "☁️",
