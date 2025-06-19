@@ -16,7 +16,7 @@ COLOR_EMOJI_MAP = {
 WELCOME_CHANNEL_ID = 1384518277786505257
 Profile_CHANNEL_ID = 1384447074241740871
 
-NICKNAME_REGEX = re.compile(r'^[가-힣a-zA-Z0-9_@!#\.,]{2,15}$')
+NICKNAME_REGEX = re.compile(r'^[가-힣a-zA-Z0-9_@!#\.,]{1,15}$')
 
 class ProfileView(discord.ui.View):
     def __init__(self, bot):
@@ -113,7 +113,7 @@ class NicknameModal(discord.ui.Modal):
         super().__init__(title="📝 별명 변경하기")
         self.nickname = discord.ui.InputText(
             label="변경할 별명을 입력해주세요",
-            placeholder="한글/영문/숫자 2자~15자 !@#_., 포함",
+            placeholder="한글/영문/숫자 1자~15자 !@#_., 포함",
             required=True,
             max_length=15
         )
