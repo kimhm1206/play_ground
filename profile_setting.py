@@ -98,7 +98,7 @@ async def send_profile_embed(bot):
     # Embed 구성
     embed = discord.Embed(
         title="🎯 프로필 설정 메뉴",
-        description="프로필 설정 버튼을 클릭해 짧은 설문에 응답 해주세요. \n설정을 완료하지 않으면 활동 채널이 보이지 않습니다!",
+        description="맴버 등록 버튼을 클릭해 짧은 설문에 응답 해주세요. \n설정을 완료하지 않으면 활동 채널이 보이지 않습니다!",
         color=discord.Color.blurple()
     )
     embed.set_footer(text="모든 설정은 언제든지 다시 변경할 수 있어요 ✨")
