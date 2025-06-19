@@ -105,11 +105,8 @@ class ChannelSettingsModal(Modal):
 # Voice room creation logic
 async def create_voice_room(guild: discord.Guild, member: discord.Member):
     category: CategoryChannel = guild.get_channel(VOICE_ROOM_CATEGORY_ID)
-    existing = [c.name for c in category.voice_channels if c.name.startswith("수다방")]
-    i = 1
-    while f"수다방{i}" in existing:
-        i += 1
-    title = f"수다방{i}"
+    
+    title = '방제를 변경해주세요'
 
     overwrites = {
         guild.default_role: PermissionOverwrite(view_channel=False, connect=False),
