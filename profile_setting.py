@@ -27,7 +27,7 @@ class ProfileView(discord.ui.View):
     async def change_nickname(self, button: discord.ui.Button, interaction: discord.Interaction):
         await interaction.response.send_modal(NicknameModal())
 
-    @discord.ui.button(label="닉네임 색 변경", style=discord.ButtonStyle.success, custom_id="profile_color")
+    @discord.ui.button(label="닉네임 색 변경", style=discord.ButtonStyle.secondary, custom_id="profile_color")
     async def change_color(self, button: discord.ui.Button, interaction: discord.Interaction):
         guild = interaction.guild
 
@@ -49,7 +49,7 @@ class ProfileView(discord.ui.View):
         view = ColorSelectionView(self.bot, interaction.user)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    @discord.ui.button(label="프로필 설정", style=discord.ButtonStyle.secondary, custom_id="profile_setup")
+    @discord.ui.button(label="맴버 등록", style=discord.ButtonStyle.success, custom_id="profile_setup")
     async def profile_setup(self, button: discord.ui.Button, interaction: discord.Interaction):
         user_nick = interaction.user.nick or interaction.user.name
         guild = interaction.guild
