@@ -15,6 +15,8 @@ RENAME_LIMIT = 2
 RENAME_WINDOW = timedelta(minutes=10)
 channel_rename_logs = {}  # {channel_id: deque([datetime])}
 
+EM_TEXT = "```ℹ️ 방 제목은 디스코드 제한으로 10분에 최대 2번만 바꿀 수 있어요!\n🙏 훈수/비하 발언 없이 다 함께 즐거운 게임 해요!```"
+
 # Utility function to sanitize Discord topic content
 def sanitize_topic(text: str) -> str:
     text = re.sub(r"[@`<>]", "", text)
@@ -89,7 +91,7 @@ class ChannelSettingsModal(Modal):
             embed = discord.Embed(
                 title=new_title,
                 description=(
-                    "```관전, 훈수, 난입 상태는\n채널상태에 적어주세요. \n디스코드API 정책에따라 10분에 2번만 \n제목변경이 가능합니다.```"
+                   EM_TEXT
                 ),
                 color=discord.Color.blue()
             )
@@ -128,7 +130,7 @@ async def create_voice_room(guild: discord.Guild, member: discord.Member):
     embed = discord.Embed(
         title=f"{title}",
         description=(
-            "```관전, 훈수, 난입 상태는\n채널상태에 적어주세요. \n디스코드API 정책에따라 10분에 2번만 \n제목변경이 가능합니다.```"
+            EM_TEXT
         ),
         color=discord.Color.blue()
     )

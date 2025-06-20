@@ -16,7 +16,8 @@ COLOR_EMOJI_MAP = {
 WELCOME_CHANNEL_ID = 1384518277786505257
 Profile_CHANNEL_ID = 1384447074241740871
 
-NICKNAME_REGEX = re.compile(r'^[가-힣a-zA-Z0-9_@!#\.,]{1,15}$')
+NICKNAME_REGEX = re.compile(r'^[가-힣a-zA-Z0-9_@!#\.,\s]{1,15}$')
+
 
 class ProfileView(discord.ui.View):
     def __init__(self, bot):
@@ -122,15 +123,13 @@ class NicknameModal(discord.ui.Modal):
 
     async def callback(self, interaction: discord.Interaction):
         new_nick = self.nickname.value.strip()
-        print(new_nick)
         # 1. 유효성 검사
         if not NICKNAME_REGEX.fullmatch(new_nick):
             await interaction.response.send_message(
-                "❌ 별명은 2~15자의 한글/영문/숫자만 사용할 수 있어요!",
+                "❌ 별명은 1~15자의 한글/영문/숫자만 사용할 수 있어요!",
                 ephemeral=True,delete_after=10
             )
             return
-
         # 2. 중복 검사 (서버 내 같은 닉네임 존재 여부)
         guild = interaction.guild
         for member in guild.members:
