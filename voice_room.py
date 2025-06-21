@@ -15,7 +15,7 @@ RENAME_LIMIT = 2
 RENAME_WINDOW = timedelta(minutes=10)
 channel_rename_logs = {}  # {channel_id: deque([datetime])}
 
-EM_TEXT = "```ℹ️ 방 제목은 디스코드 제한으로 10분에 최대 2번만 바꿀 수 있어요!\n🙏 훈수/비하 발언 없이 다 함께 즐거운 게임 해요!```"
+EM_TEXT = "```ℹ️ 방 제목은 10분에 최대 2번만 바꿀 수 있어요!\n🙏 훈수/비하 발언 없이 다 함께 즐거운 게임 해요!```"
 
 # Utility function to sanitize Discord topic content
 def sanitize_topic(text: str) -> str:

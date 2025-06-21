@@ -33,7 +33,7 @@ async def on_ready():
     await send_ticket_message(bot)
     await bot.change_presence(activity=Activity(
         type=ActivityType.playing,  # 또는 watching, listening 등
-        name="📝 놀이터 전용 Moly bot"))
+        name="📝 놀이터 전용 Moly bot\nDeveloped by 주우자악"))
     
 
 
