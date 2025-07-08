@@ -35,6 +35,7 @@ def register_slash_commands(bot: commands.Bot):
         embed.add_field(name="하고 싶은 게임", value=f"**{profile['wanted_games'] or '없음'}**", inline=False)
         embed.add_field(name="가입 경로", value=f"**{profile['referral']}**", inline=False)
         embed.add_field(name="한줄 소개", value=f"``{profile['bio']}``", inline=False)
+        
 
         # embed.set_footer(text="프로필은 언제든지 수정할 수 있어요 ✨")
 
