@@ -49,7 +49,7 @@ def get_token():
         conn.close()
 
 
-def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str, referral: str, bio: str):
+def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str, referral: str, bio: str, code: str):
     """
     사용자 프로필 저장 또는 업데이트
     """
@@ -58,16 +58,17 @@ def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str
         cursor = conn.cursor()
 
         cursor.execute("""
-            INSERT INTO user_profiles (user_id, mbti, favorite_games, wanted_games, referral, bio)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO user_profiles (user_id, mbti, favorite_games, wanted_games, referral, bio, code)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (user_id)
             DO UPDATE SET
                 mbti = EXCLUDED.mbti,
                 favorite_games = EXCLUDED.favorite_games,
                 wanted_games = EXCLUDED.wanted_games,
                 referral = EXCLUDED.referral,
-                bio = EXCLUDED.bio;
-        """, (user_id, mbti.strip(), favorite_games.strip(), wanted_games.strip(), referral.strip(), bio.strip()))
+                bio = EXCLUDED.bio,
+                code = EXCLUDED.code;
+        """, (user_id, mbti.strip(), favorite_games.strip(), wanted_games.strip(), referral.strip(), bio.strip(),code.strip()))
         
         cursor.execute("INSERT INTO voice_leaderboard (user_id) VALUES (%s) ON CONFLICT DO NOTHING;", (user_id,))
         conn.commit()
@@ -99,7 +100,8 @@ def get_profile(user_id: int):
                 "favorite_games": result[1],
                 "wanted_games": result[2],
                 "referral": result[3],
-                "bio": result[4]
+                "bio": result[4],
+                "code": result[5]
             }
         return None
     except Exception as e:

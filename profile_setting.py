@@ -220,6 +220,12 @@ class ProfileModal(discord.ui.Modal):
             max_length=4,
             value=existing_data['mbti'] if not new and existing_data else None
         )
+        self.code = discord.ui.InputText(
+            label="STEAM 친구코드",
+            placeholder="예: 스팀코드 or 미공개",
+            required=True,
+            value=existing_data['code'] if not new and existing_data else None
+        )
         self.games = discord.ui.InputText(
             label="자주 하는 게임 (','로 구분, 최대 100자)",
             placeholder="예: 리그오브레전드, 오버워치",
@@ -253,6 +259,7 @@ class ProfileModal(discord.ui.Modal):
         self.add_item(self.wanted)
         self.add_item(self.referral)
         self.add_item(self.bio)
+        self.add_item(self.code)
         
 
     async def callback(self, interaction: discord.Interaction):
@@ -269,21 +276,33 @@ class ProfileModal(discord.ui.Modal):
             )
             return
 
+        code_value = self.code.value.strip()
+        if code_value.lower() != "미공개" and not code_value.isdigit():
+            await interaction.response.send_message(
+                f"❌ `{code_value}` 는 올바른 스팀 친구코드가 아니에요! (숫자만 입력하거나 '미공개'를 입력해주세요)",
+                ephemeral=True, delete_after=5
+            )
+            return
+
         # ✅ DB 저장
         if mbti_value and mbti_value.lower() != "미공개":
             mbti_value = mbti_value.upper()
         else:
             mbti_value = mbti_value or "미공개"
+
+        code_value = code_value if code_value else "미공개"
+
         save_profile(
             user_id=self.id,
             mbti=mbti_value,
             favorite_games=self.games.value.strip(),
             wanted_games=self.wanted.value.strip(),
             referral=self.referral.value.strip(),
-            bio=self.bio.value.strip()
+            bio=self.bio.value.strip(),
+            code=code_value
         )
 
-        # 🎖️ 역할 부여 (ID: 1384442724580720680)
+        # 🎖️ 역할 부여
         role = interaction.guild.get_role(1384442724580720680)
         if role:
             await interaction.user.add_roles(role, reason="프로필 설정")
@@ -291,8 +310,9 @@ class ProfileModal(discord.ui.Modal):
         await interaction.response.send_message(
             f"✅ `{self.nickname}` 님의 프로필이 성공적으로 설정되었습니다!",
             ephemeral=True, delete_after=10
-            )
-            
+        )
+
+        # 👋 새 유저 환영 임베드
         if self.new == 1:
             channel = interaction.guild.get_channel(WELCOME_CHANNEL_ID)
             if channel:
@@ -301,13 +321,8 @@ class ProfileModal(discord.ui.Modal):
                     description=f"{interaction.user.mention} 님의 프로필입니다:",
                     color=discord.Color.green()
                 )
-                
-                if mbti_value and mbti_value.lower() != "미공개":
-                    mbti_display = mbti_value.upper()
-                else:
-                    mbti_display = mbti_value or "미공개"
-
-                embed.add_field(name="MBTI", value=f"**{mbti_display}**", inline=True)
+                embed.add_field(name="MBTI", value=f"**{mbti_value}**", inline=True)
+                embed.add_field(name="스팀 친구 코드", value=f"**{code_value}**", inline=True)
                 embed.add_field(name="자주 하는 게임", value=f"**{self.games.value.strip() or '없음'}**", inline=False)
                 embed.add_field(name="하고 싶은 게임", value=f"**{self.wanted.value.strip() or '없음'}**", inline=False)
                 embed.add_field(name="가입 경로", value=f"**{self.referral.value.strip()}**", inline=False)
@@ -315,4 +330,5 @@ class ProfileModal(discord.ui.Modal):
                 embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
                 await channel.send(content=f"🎊 새로운 맴버 **{interaction.user.mention}** 님이 들어오셨어요!", embed=embed)
+
         
