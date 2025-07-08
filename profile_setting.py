@@ -3,6 +3,7 @@ from discord.ext import commands
 import re
 from utils.function import *
 
+
 COLOR_EMOJI_MAP = {
     "WHITE": "⚪", "GRAY": "⬜", "BLACK": "⬛",
     "RED": "🔴", "PINK": "🌸",  "PINK2": "🩷","PINK3": "🎀",
@@ -50,7 +51,7 @@ class ProfileView(discord.ui.View):
         view = ColorSelectionView(self.bot, interaction.user)
         await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    @discord.ui.button(label="맴버 등록", style=discord.ButtonStyle.success, custom_id="profile_setup")
+    @discord.ui.button(label="맴버 등록 & 프로필 수정", style=discord.ButtonStyle.success, custom_id="profile_setup")
     async def profile_setup(self, button: discord.ui.Button, interaction: discord.Interaction):
         user_nick = interaction.user.nick or interaction.user.name
         guild = interaction.guild
@@ -62,7 +63,7 @@ class ProfileView(discord.ui.View):
 
         if existing_profile:
         # 기존 정보 있으면 중복 검사 생략, 기존 값 모달로 전달
-            await interaction.response.send_modal(ProfileModal(user_nick, user_id, new=False, existing_data=existing_profile))
+            await interaction.response.send_modal(IntroModal(user_nick, user_id, new=False, existing_data=existing_profile))
         else:
             # 중복 닉네임 검사 + 정규식 조건 포함
             for member in guild.members:
@@ -80,7 +81,7 @@ class ProfileView(discord.ui.View):
                     return
 
             # 신규 입력 모달 호출
-            await interaction.response.send_modal(ProfileModal(user_nick, user_id, new=True))
+            await interaction.response.send_modal(IntroModal(user_nick, user_id, new=True))
 
         
 async def send_profile_embed(bot):
@@ -207,63 +208,46 @@ class ColorSelect(discord.ui.Select):
         await interaction.response.defer()  # 별도 메시지 없이 응답 처리만
 
 
-class ProfileModal(discord.ui.Modal):
-    def __init__(self, nickname, id, new=True, existing_data=None):
-        super().__init__(title=f"📝 {nickname} 프로필 설정")
-        self.id = id
+class IntroModal(discord.ui.Modal):
+    def __init__(self, nickname, user_id, new=True, existing_data=None):
+        super().__init__(title=f"📝 {nickname} 프로필 설정 (1/2)")
         self.nickname = nickname
+        self.user_id = user_id
         self.new = new
+        self.existing_data = existing_data or {}
+
+        
         self.mbti = discord.ui.InputText(
             label="MBTI (16종류, 영문 대문자 or 소문자)",
             placeholder="예: INFP 또는 infp, 미공개",
             required=True,
             max_length=4,
-            value=existing_data['mbti'] if not new and existing_data else None
-        )
-        self.code = discord.ui.InputText(
-            label="STEAM 친구코드",
-            placeholder="예: 스팀코드 or 미공개",
-            required=True,
-            value=existing_data['code'] if not new and existing_data else None
-        )
-        self.games = discord.ui.InputText(
-            label="자주 하는 게임 (','로 구분, 최대 100자)",
-            placeholder="예: 리그오브레전드, 오버워치",
-            max_length=100,
-            required=False,
-            value=existing_data['favorite_games'] if not new and existing_data else None
-        )
-        self.wanted = discord.ui.InputText(
-            label="하고 싶은 게임 (','로 구분, 최대 100자)",
-            placeholder="예: 세븐데이즈투다이, 마인크래프트",
-            max_length=100,
-            required=False,
-            value=existing_data['wanted_games'] if not new and existing_data else None
+            value=self.existing_data.get("mbti", None)
         )
         self.referral = discord.ui.InputText(
             label="가입 경로 (지인 소개 시 닉네임 포함)",
             placeholder="예: 디스보드, 친구추천(별명)",
             required=True,
-            value=existing_data['referral'] if not new and existing_data else None
+            value=self.existing_data.get("referral", None)
         )
         self.bio = discord.ui.InputText(
-            label="간단 한줄 자기소개 (최대 100자)",
+            label="간단 한줄 자기소개",
             placeholder="예: 다양한 게임을 좋아하는 사람입니다!",
-            max_length=100,
+            max_length=200,
             required=True,
-            value=existing_data['bio'] if not new and existing_data else None
+            value=self.existing_data.get("bio", None)
         )
 
         self.add_item(self.mbti)
-        self.add_item(self.games)
-        self.add_item(self.wanted)
         self.add_item(self.referral)
         self.add_item(self.bio)
-        self.add_item(self.code)
-        
 
     async def callback(self, interaction: discord.Interaction):
         mbti_value = self.mbti.value.strip()
+        referral = self.referral.value.strip()
+        
+        bio_value = self.bio.value.strip()
+
         valid_mbti = {
             'intj','intp','entj','entp','infj','infp','enfj','enfp',
             'istj','isfj','estj','esfj','istp','isfp','estp','esfp', '미공개'
@@ -275,45 +259,132 @@ class ProfileModal(discord.ui.Modal):
                 ephemeral=True, delete_after=5
             )
             return
+        
+        mbti_value = mbti_value.upper() if mbti_value.lower() != "미공개" else "미공개"
+        
 
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title=f"📝 {self.nickname} 프로필 설정 (2/2)",
+                description="✅ 기본 프로필 설정이 완료되었어요!\n\n🎮 마지막으로 게임 관련 질문들 몇 가지만 더 여쭤볼게요!",
+                color=discord.Color.blurple()
+            ),
+            view=GameModalConfirmView(
+                nickname=self.nickname,
+                user_id=self.user_id,
+                mbti=mbti_value,
+                referral=referral,
+                new=self.new,
+                existing_data={**self.existing_data, "bio": bio_value}
+            ),
+            ephemeral=True
+        )
+        
+class GameModalConfirmView(discord.ui.View):
+    def __init__(self, nickname, user_id, mbti, referral, new, existing_data):
+        super().__init__(timeout=300)  # 5분 타임아웃
+        self.nickname = nickname
+        self.user_id = user_id
+        self.mbti = mbti
+        self.referral = referral
+        self.new = new
+        self.existing_data = existing_data
+
+    @discord.ui.button(label="다음", style=discord.ButtonStyle.primary)
+    async def proceed_to_game_modal(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_modal(GameModal(
+            nickname=self.nickname,
+            user_id=self.user_id,
+            mbti=self.mbti,
+            referral=self.referral,
+            new=self.new,
+            existing_data=self.existing_data
+        ))
+
+
+class GameModal(discord.ui.Modal):
+    def __init__(self, nickname, user_id, mbti=None, referral=None, new=False, existing_data=None):
+        super().__init__(title=f"📝 {nickname} 프로필 설정 (2/2)", custom_id=f"profile_modal_step2_{user_id}")
+        self.nickname = nickname
+        self.user_id = user_id
+        self.mbti = mbti
+        self.referral = referral
+        self.new = new
+        self.existing_data = existing_data or {}
+        
+        self.code = discord.ui.InputText(
+            label="STEAM 친구코드",
+            placeholder="예: 숫자 또는 미공개",
+            required=True,
+            value=self.existing_data.get("code", None)
+        )
+
+        self.games = discord.ui.InputText(
+            label="자주 하는 게임",
+            placeholder="예: 리그오브레전드, 오버워치",
+            max_length=100,
+            required=False,
+            value=self.existing_data.get("favorite_games", None)
+        )
+        self.wanted = discord.ui.InputText(
+            label="하고 싶은 게임",
+            placeholder="예: 세븐데이즈투다이, 마인크래프트",
+            max_length=100,
+            required=False,
+            value=self.existing_data.get("wanted_games", None)
+        )
+
+        self.add_item(self.code)
+        self.add_item(self.games)
+        self.add_item(self.wanted)
+
+    async def callback(self, interaction: discord.Interaction):
+        mbti_value = self.mbti.upper() if self.mbti.lower() != "미공개" else "미공개"
+        
         code_value = self.code.value.strip()
+        
         if code_value.lower() != "미공개" and not code_value.isdigit():
             await interaction.response.send_message(
                 f"❌ `{code_value}` 는 올바른 스팀 친구코드가 아니에요! (숫자만 입력하거나 '미공개'를 입력해주세요)",
                 ephemeral=True, delete_after=5
             )
             return
-
-        # ✅ DB 저장
-        if mbti_value and mbti_value.lower() != "미공개":
-            mbti_value = mbti_value.upper()
-        else:
-            mbti_value = mbti_value or "미공개"
-
-        code_value = code_value if code_value else "미공개"
+        
+        code_value = code_value or "미공개"
 
         save_profile(
-            user_id=self.id,
+            user_id=self.user_id,
             mbti=mbti_value,
             favorite_games=self.games.value.strip(),
             wanted_games=self.wanted.value.strip(),
-            referral=self.referral.value.strip(),
-            bio=self.bio.value.strip(),
+            referral=self.referral,
+            bio=self.existing_data.get("bio", ""),  # bio는 이전 모달에서 받음
             code=code_value
         )
 
-        # 🎖️ 역할 부여
         role = interaction.guild.get_role(1384442724580720680)
         if role:
             await interaction.user.add_roles(role, reason="프로필 설정")
 
-        await interaction.response.send_message(
-            f"✅ `{self.nickname}` 님의 프로필이 성공적으로 설정되었습니다!",
-            ephemeral=True, delete_after=10
-        )
+        if self.new:
+            title = "🎉 환영합니다!"
+            description = f"✅ `{self.nickname}` 님의 프로필이 **성공적으로 등록**되었습니다!\nPlay_Ground 에서 즐거운 시간 보내세요 :)"
+            color = discord.Color.green()
+        else:
+            title = "🛠️ 프로필 수정 완료!"
+            description = f"✅ `{self.nickname}` 님의 프로필이 **성공적으로 수정**되었습니다.\n변경된 내용이 반영되었어요!"
+            color = discord.Color.blurple()
 
-        # 👋 새 유저 환영 임베드
-        if self.new == 1:
+        await interaction.response.edit_message(
+            embed=discord.Embed(
+                title=title,
+                description=description,
+                color=color
+            ),
+            view=None,delete_after=10
+        )
+        
+        if self.new:
             channel = interaction.guild.get_channel(WELCOME_CHANNEL_ID)
             if channel:
                 embed = discord.Embed(
@@ -325,10 +396,8 @@ class ProfileModal(discord.ui.Modal):
                 embed.add_field(name="스팀 친구 코드", value=f"**{code_value}**", inline=True)
                 embed.add_field(name="자주 하는 게임", value=f"**{self.games.value.strip() or '없음'}**", inline=False)
                 embed.add_field(name="하고 싶은 게임", value=f"**{self.wanted.value.strip() or '없음'}**", inline=False)
-                embed.add_field(name="가입 경로", value=f"**{self.referral.value.strip()}**", inline=False)
-                embed.add_field(name="한줄 소개", value=f"``{self.bio.value.strip()}``", inline=False)
+                embed.add_field(name="가입 경로", value=f"**{self.referral}**", inline=False)
+                embed.add_field(name="한줄 소개", value=f"``{self.existing_data.get('bio', '')}``", inline=False)
                 embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
                 await channel.send(content=f"🎊 새로운 맴버 **{interaction.user.mention}** 님이 들어오셨어요!", embed=embed)
-
-        

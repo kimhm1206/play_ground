@@ -6,7 +6,7 @@ from datetime import datetime
 if platform.system() == 'Linux':
     DB_HOST = 'localhost'
 else:
-    DB_HOST = '3.39.78.125'
+    DB_HOST = '43.201.35.182'
 
 # PostgreSQL 접속 설정
 DB_NAME = 'discord'
@@ -88,7 +88,7 @@ def get_profile(user_id: int):
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT mbti, favorite_games, wanted_games, referral, bio
+            SELECT mbti, favorite_games, wanted_games, referral, bio, code
             FROM user_profiles
             WHERE user_id = %s
         """, (user_id,))
