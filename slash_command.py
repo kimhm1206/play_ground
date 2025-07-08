@@ -30,7 +30,7 @@ def register_slash_commands(bot: commands.Bot):
             mbti_display = mbti_value or "미공개"
 
         embed.add_field(name="MBTI", value=f"**{mbti_display}**", inline=False)
-        embed.add_field(name="스팀 친구 코드", value=f"**{profile["code"] or '미공개'}**", inline=True)
+        embed.add_field(name="스팀 친구 코드", value=f"**{profile['code'] or '미공개'}**", inline=True)
         embed.add_field(name="자주 하는 게임", value=f"**{profile['favorite_games'] or '없음'}**", inline=False)
         embed.add_field(name="하고 싶은 게임", value=f"**{profile['wanted_games'] or '없음'}**", inline=False)
         embed.add_field(name="가입 경로", value=f"**{profile['referral']}**", inline=False)
