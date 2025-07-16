@@ -54,7 +54,7 @@ async def send_leaderboard_embed(bot: commands.Bot):
 
     # ✅ Embed 생성
     embed = discord.Embed(
-        title="🎖️ 음성 리더보드 – 상위 5명",
+        title="🎖️ 음성 리더보드 – 상위 7명",
         description="※ 레벨 및 다음 레벨까지 경험치 진행률 기준입니다\n※ 하루 최대 360분까지만 누적됩니다",
         color=discord.Color.gold()
     )
@@ -62,7 +62,7 @@ async def send_leaderboard_embed(bot: commands.Bot):
     medal_emojis = ["🥇", "🥈", "🥉"]
 
     for i, user in enumerate(top10_cache, start=1):
-        if i > 5:
+        if i > 7:
             break
         member = channel.guild.get_member(user["user_id"])
         name = member.display_name if member else f"Unknown({user['user_id']})"
