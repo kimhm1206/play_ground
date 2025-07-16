@@ -75,7 +75,8 @@ def register_slash_commands(bot: commands.Bot):
 
     @bot.slash_command(
             name="리더보드",
-            description="현재 나의 레벨과 전체 순위를 확인합니다."
+            description="해당 유저의 레벨과 전체 순위를 확인합니다.",
+            default_member_permissions=discord.Permissions(administrator=True)
         )
     async def check_rank(
         ctx: discord.ApplicationContext,
@@ -106,8 +107,10 @@ def register_slash_commands(bot: commands.Bot):
             await ctx.respond(
                 f"🎖️ {member.nick or member.name} 순위는 **{rank}위**입니다!\n"
                 f"📊 레벨 **{level}**, 경험치 **{percent}%** 진행 중이에요!"
-            )
+            ,ephemeral=True)
         else:
             await ctx.respond(
                 "🔍 아직 순위에 등록되지 않았어요.\n(음성 채널에서 1분 이상 활동해야 등록됩니다!)"
-            )
+            ,ephemeral=True)
+            
+            

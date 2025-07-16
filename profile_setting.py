@@ -62,10 +62,12 @@ class ProfileView(discord.ui.View):
         existing_profile = get_profile(user_id)
 
         if existing_profile:
-        # 기존 정보 있으면 중복 검사 생략, 기존 값 모달로 전달
-            await interaction.response.send_modal(IntroModal(user_nick, user_id, new=False, existing_data=existing_profile))
+            # 기존 정보 있으면 중복 검사 생략, 기존 값 모달로 전달
+            await interaction.response.send_modal(
+                IntroModal(user_nick, user_id, new=False, existing_data=existing_profile)
+            )
         else:
-            # 중복 닉네임 검사 + 정규식 조건 포함
+            # ✅ 중복 닉네임 검사 + 정규식 조건 포함
             for member in guild.members:
                 other_nick = member.nick or member.name
                 if (
@@ -79,6 +81,20 @@ class ProfileView(discord.ui.View):
                     )
                     await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
                     return
+
+            # ✅ 추가! 닉네임에 길드 역할(Role) 이름 포함 금지
+            for role in guild.roles:
+                if role.name.lower() in user_nick.lower():
+                    embed = discord.Embed(
+                        description=f"❌ 닉네임에 **`{role.name}`**(역할명)이 포함될 수 없어요!\n먼저 **별명 변경**을 해주세요!",
+                        color=discord.Color.red()
+                    )
+                    await interaction.response.send_message(embed=embed, ephemeral=True, delete_after=5)
+                    return
+
+            # ✅ 통과하면 신규 입력 모달 호출
+            await interaction.response.send_modal(IntroModal(user_nick, user_id, new=True))
+
 
             # 신규 입력 모달 호출
             await interaction.response.send_modal(IntroModal(user_nick, user_id, new=True))
@@ -138,6 +154,15 @@ class NicknameModal(discord.ui.Modal):
                 await interaction.response.send_message(
                     f"❌ `{new_nick}` 는 이미 사용 중인 별명이에요!",
                     ephemeral=True,delete_after=10
+                )
+                return
+            
+            # ✅ 2. 서버 역할(Role) 이름이 포함된 닉네임 금지
+        for role in guild.roles:
+            if role.name.lower() in new_nick.lower():
+                await interaction.response.send_message(
+                    f"❌ 닉네임에 **`{role.name}`**(역할명)이 포함될 수 없어요!",
+                    ephemeral=True, delete_after=10
                 )
                 return
 
