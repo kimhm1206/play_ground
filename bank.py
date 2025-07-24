@@ -52,8 +52,6 @@ class BankView(discord.ui.View):
         )
         await interaction.delete_original_response(delay=5)
 
-
-
 async def open_bank_menu(interaction: discord.Interaction):
     """은행 메인 메뉴 열기"""
     user_id = interaction.user.id
