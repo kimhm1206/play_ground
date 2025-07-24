@@ -8,7 +8,7 @@ from utils.function import get_token
 from voice_tracker import VoiceTracker
 from leaderboard import send_leaderboard_embed, cache_leaderboard_top10
 from voice_room import VoiceRoomCog
-
+from casino import send_casino_lobby
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -31,6 +31,7 @@ async def on_ready():
     await send_leaderboard_embed(bot)
     await send_profile_embed(bot)
     await send_ticket_message(bot)
+    # await send_casino_lobby(bot)
     await bot.change_presence(activity=Activity(
         type=ActivityType.playing,  # 또는 watching, listening 등
         name="📝 놀이터 전용 Moly bot"))

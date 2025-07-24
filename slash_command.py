@@ -44,7 +44,7 @@ def register_slash_commands(bot: commands.Bot):
     
     @bot.slash_command(
         name="익명대화",
-        description="익명으로 뒤뜰에 메시지를 보냅니다."
+        description="익명으로 익명대화방에 메시지를 보냅니다."
     )
     async def anonymous_message(
         ctx: discord.ApplicationContext,

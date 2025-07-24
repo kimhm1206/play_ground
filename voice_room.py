@@ -98,7 +98,10 @@ class ChannelSettingsModal(Modal):
             view = VoiceRoomControlView(self.channel)
             await interaction.message.edit(embed=embed, view=view)
 
-            await interaction.response.send_message("✅ 방 제목이 변경되었습니다!", ephemeral=True, delete_after=5)
+            await interaction.response.send_message(
+                f"✅ {interaction.user.mention} 님이 방 제목을 **{new_title}** 으로 변경하셨습니다!",
+                ephemeral=False
+            )
 
         except Exception as e:
             print(f"[에러] Modal 처리 실패: {e}")
