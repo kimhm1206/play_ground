@@ -57,6 +57,7 @@ async def on_member_remove(member: discord.Member):
         
         
         
+        
 register_slash_commands(bot)
 register_game_commands(bot)
 bot.run(get_token())
