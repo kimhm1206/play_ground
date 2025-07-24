@@ -180,7 +180,7 @@ async def show_loan_terms(interaction: discord.Interaction, user_id: int):
             "6️⃣ 장기 연체 상태에서는 매일 00시 강제 상환됩니다.\n"
             "7️⃣ 장기 연체 중에도 **게임/돈줘는 가능**합니다.\n\n"
             "✅ 위 내용을 이해하고 동의해야 대출이 가능합니다."
-        )
+        ),
         color=discord.Color.orange()
     )
     view = LoanTermsView(user_id)
