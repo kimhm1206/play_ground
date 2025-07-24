@@ -1,7 +1,7 @@
 import discord
 import requests
 from discord.ext import commands
-from utils.function import get_profile , save_anonymous_log, get_connection
+from utils.function import get_profile , save_anonymous_log, get_connection,get_balance
 
 DAILY_LIMIT = 360
 LEVEL_UNIT = 30
@@ -9,6 +9,7 @@ WEBHOOK_URL = "https://discord.com/api/webhooks/1384529950782263408/2mIMMUVH790r
 TARGET_CHANNEL_ID = 1384527567280930859
 # 메인 봇 객체가 있는 곳에서 불러올 예정이므로 Cog 사용 X
 def register_slash_commands(bot: commands.Bot):
+    
     @bot.slash_command(name="프로필", description="해당 유저의 프로필을 확인합니다.")
     async def show_profile(
         ctx: discord.ApplicationContext,
@@ -112,5 +113,52 @@ def register_slash_commands(bot: commands.Bot):
             await ctx.respond(
                 "🔍 아직 순위에 등록되지 않았어요.\n(음성 채널에서 1분 이상 활동해야 등록됩니다!)"
             ,ephemeral=True)
+            
+    @bot.slash_command(
+    name="지갑",
+    description="현재 보유 잔액을 확인합니다."
+)
+    async def 지갑(ctx: discord.ApplicationContext):
+        user_id = ctx.author.id
+        balance = get_balance(user_id)
+
+        if balance is None:
+            await ctx.respond(
+                f"❌ 아직 카지노에 등록되지 않았습니다!\n먼저 **/일당**으로 시작해보세요!",
+                ephemeral=True
+            )
+            return
+
+        embed = discord.Embed(
+            title="💰 플그 카지노 잔액 확인",
+            description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
+            color=discord.Color.gold()
+        )
+        embed.set_footer(text="Develop by 배액호오")
+        await ctx.respond(embed=embed, ephemeral=True)
+        
+    @bot.slash_command(
+    name="잔액",
+    description="현재 보유 잔액을 확인합니다."
+)
+    async def 잔액(ctx: discord.ApplicationContext):
+        user_id = ctx.author.id
+        balance = get_balance(user_id)
+
+        if balance is None:
+            await ctx.respond(
+                f"❌ 아직 카지노에 등록되지 않았습니다!\n먼저 **/일당**으로 시작해보세요!",
+                ephemeral=True
+            )
+            return
+
+        embed = discord.Embed(
+            title="💰 플그 카지노 잔액 확인",
+            description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
+            color=discord.Color.gold()
+        )
+        embed.set_footer(text="Develop by 배액호오")
+        await ctx.respond(embed=embed, ephemeral=True)
+            
             
             

@@ -3,12 +3,14 @@ from discord.ext import commands
 from discord import Activity, ActivityType
 from profile_setting import send_profile_embed
 from slash_command import register_slash_commands
+from minigame import register_game_commands
 from ticket import send_ticket_message
 from utils.function import get_token
 from voice_tracker import VoiceTracker
 from leaderboard import send_leaderboard_embed, cache_leaderboard_top10
 from voice_room import VoiceRoomCog
 from casino import send_casino_lobby
+from schedule import setup_scheduler
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -24,14 +26,14 @@ async def on_ready():
     print(f"✅ Logged in as {bot.user}")
     bot.add_cog(VoiceRoomCog(bot))
     bot.add_cog(VoiceTracker(bot))
-    # bot.add_cog(VoiceRoomCog(bot))
     
     await bot.sync_commands()
     await cache_leaderboard_top10()
     await send_leaderboard_embed(bot)
     await send_profile_embed(bot)
     await send_ticket_message(bot)
-    # await send_casino_lobby(bot)
+    await send_casino_lobby(bot)
+    setup_scheduler(bot)
     await bot.change_presence(activity=Activity(
         type=ActivityType.playing,  # 또는 watching, listening 등
         name="📝 놀이터 전용 Moly bot"))
@@ -56,6 +58,6 @@ async def on_member_remove(member: discord.Member):
         
         
 register_slash_commands(bot)
-
+register_game_commands(bot)
 bot.run(get_token())
 
