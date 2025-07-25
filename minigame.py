@@ -5,45 +5,45 @@ from gametools import *
 
 def register_game_commands(bot: commands.Bot):
 
-    @bot.slash_command(
-        name="홀짝주사위",
-        description="주사위를 굴려 홀짝 맞추기 게임을 합니다!"
-    )
-    async def 홀짝주사위(
-        ctx: discord.ApplicationContext,
-        배팅금:discord.Option(int, description="베팅할 금액을 입력하세요 (예: 5000)") # type: ignore
-    ):
-        user_id = ctx.author.id
-        balance = get_balance(user_id)
-        amount = 배팅금
-        # ✅ 베팅 가능 여부 체크
-        if amount < 500:
-            await ctx.respond("❌ 베팅 금액은 500코인 이상이어야 합니다!", ephemeral=True)
-            return
+    # @bot.slash_command(
+    #     name="홀짝주사위",
+    #     description="주사위를 굴려 홀짝 맞추기 게임을 합니다!"
+    # )
+    # async def 홀짝주사위(
+    #     ctx: discord.ApplicationContext,
+    #     배팅금:discord.Option(int, description="베팅할 금액을 입력하세요 (예: 5000)") # type: ignore
+    # ):
+    #     user_id = ctx.author.id
+    #     balance = get_balance(user_id)
+    #     amount = 배팅금
+    #     # ✅ 베팅 가능 여부 체크
+    #     if amount < 500:
+    #         await ctx.respond("❌ 베팅 금액은 500코인 이상이어야 합니다!", ephemeral=True)
+    #         return
 
-        if balance < amount:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
-            return
+    #     if balance < amount:
+    #         await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
+    #         return
 
-        # ✅ 첫 번째 주사위 굴림
-        first_roll = random.randint(1, 6)
-        first_emoji = DICE_EMOJIS[first_roll]
+    #     # ✅ 첫 번째 주사위 굴림
+    #     first_roll = random.randint(1, 6)
+    #     first_emoji = DICE_EMOJIS[first_roll]
 
-        # ✅ 첫 번째 메시지 (홀/짝 버튼 표시)
-        embed = discord.Embed(
-            title="🎲 홀짝 주사위 게임",
-            description=f"첫 번째 주사위: **{first_emoji}**\n\n홀짝을 선택하세요!",
-            color=discord.Color.blurple()
-        )
-        embed.set_footer(text=f"베팅 금액: {amount:,}코인")
+    #     # ✅ 첫 번째 메시지 (홀/짝 버튼 표시)
+    #     embed = discord.Embed(
+    #         title="🎲 홀짝 주사위 게임",
+    #         description=f"첫 번째 주사위: **{first_emoji}**\n\n홀짝을 선택하세요!",
+    #         color=discord.Color.blurple()
+    #     )
+    #     embed.set_footer(text=f"베팅 금액: {amount:,}코인")
 
-        view = HolJjakButtonView(
-            user_id=user_id,
-            first_roll=first_roll,
-            bet_amount=amount,
-            balance=balance
-        )
-        await ctx.respond(embed=embed, view=view)
+    #     view = HolJjakButtonView(
+    #         user_id=user_id,
+    #         first_roll=first_roll,
+    #         bet_amount=amount,
+    #         balance=balance
+    #     )
+    #     await ctx.respond(embed=embed, view=view)
         
     @bot.slash_command(
         name="주사위",

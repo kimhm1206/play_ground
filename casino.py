@@ -35,12 +35,16 @@ class CasinoLobbyView(discord.ui.View):
             description="PG 카지노에서 즐길 수 있는 게임 목록과 설명입니다!\n**게임은 아래 카지노 채널에서 이용해주세요!**",
             color=discord.Color.gold()
         )
-
         embed.add_field(
-            name="🎲 홀짝주사위",
-            value="주사위 2개 합의 홀/짝을 맞추면 승리!\n`/홀짝주사위 [금액]`\n**배당 2배 (순이익+1배)**",
+            name="🪙 동전던지기",
+            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)**",
             inline=False
         )
+        # embed.add_field(
+        #     name="🎲 홀짝주사위",
+        #     value="주사위 2개 합의 홀/짝을 맞추면 승리!\n`/홀짝주사위 [금액]`\n**배당 2배 (순이익+1배)**",
+        #     inline=False
+        # )
         embed.add_field(
             name="🎲 주사위 합 맞추기",
             value="주사위 2개 합이 특정 숫자가 될지 맞추는 게임!\n`/주사위 [금액]`\n**배당: 합 확률에 따라 5배~30배!**",
@@ -76,11 +80,7 @@ class CasinoLobbyView(discord.ui.View):
             value="3마리 말 중 1등 할 말을 선택!\n`/경마 [금액]`\n승리 시 **3배 (순이익+2배)**",
             inline=False
         )
-        embed.add_field(
-            name="🪙 동전던지기",
-            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)**",
-            inline=False
-        )
+        
         embed.add_field(
             name="✅ 지갑 확인",
             value="본인 지갑의 잔액을 확인 합니다.\n`/지갑` , `/잔액`",
