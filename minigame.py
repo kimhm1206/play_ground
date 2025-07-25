@@ -116,23 +116,23 @@ def register_game_commands(bot: commands.Bot):
         result_text = ""
         reels = []
 
-        # ✅ 패턴 결정
-        if roll == 1:
+        # ✅ 패턴 결정 (확률 기반)
+        if roll <= 2:                      # 0.2%
             pattern = "잭팟"
-        elif roll <= 3:
+        elif roll <= 5:                    # 0.3%
             pattern = "다이아"
-        elif roll <= 6:
+        elif roll <= 10:                   # 0.5%
             pattern = "황금"
-        elif roll <= 10:
-            pattern = "과일3"
-        elif roll <= 40:
-            pattern = "과일모둠"
-        elif roll == 41:
+        elif roll <= 20:                   # 1.0%
             pattern = "폭탄"
-        elif roll <= 410:
-            pattern = "두개매치"
-        else:
+        elif roll <= 30:                   # 1.0%
+            pattern = "과일3"
+        elif roll <= 70:                   # 4.0%
+            pattern = "과일모둠"
+        elif roll <= 620:                  # 55.0%
             pattern = "꽝"
+        else:                              # 나머지(38%)
+            pattern = "두개매치"
 
         # ✅ 패턴별 그림 + 배당 설정
         if pattern == "잭팟":
@@ -150,6 +150,11 @@ def register_game_commands(bot: commands.Bot):
             payout_multiplier = 20
             result_text = "🪙 **황금 매치!** 황금 3개 20배 당첨!"
 
+        elif pattern == "폭탄":
+            reels = ["💣", "💣", "💣"]
+            payout_multiplier = None  # 특수 처리 → 이후 잔액 80% 차감 로직
+            result_text = "💥 **폭탄 등장! 보유 잔액 80% 차감!**"
+
         elif pattern == "과일3":
             fruit = random.choice(["🍒", "🍋", "🍇"])
             reels = [fruit, fruit, fruit]
@@ -162,11 +167,6 @@ def register_game_commands(bot: commands.Bot):
             payout_multiplier = 6
             result_text = "🍒🍋🍇 **과일 모둠 매치! 6배 당첨!**"
 
-        elif pattern == "폭탄":
-            reels = ["💣", "💣", "💣"]
-            payout_multiplier = None  # 특수 처리
-            result_text = "💥 **폭탄 등장! 보유 잔액 80% 차감!**"
-
         elif pattern == "두개매치":
             # 2개만 일치하는 랜덤 (전체 심볼 포함)
             base = random.choice(ALL_SYMBOLS)
@@ -176,9 +176,18 @@ def register_game_commands(bot: commands.Bot):
             payout_multiplier = 2
             result_text = "✅ **2개 일치! 2배!**"
 
-        else:  # 기본 꽝
-            # 전부 다 다른 심볼 (전체 심볼 포함)
-            reels = random.sample(ALL_SYMBOLS, 3)
+        else:  # ✅ 기본 꽝
+            # 반드시 1개는 비과일 심볼 포함
+            non_fruit_symbol = random.choice(NON_FRUITS)
+            
+            # 나머지 2개는 전체 심볼에서 중복 없이 선택
+            remaining_symbols = random.sample(
+                [s for s in ALL_SYMBOLS if s != non_fruit_symbol], 2
+            )
+            
+            reels = [non_fruit_symbol] + remaining_symbols
+            random.shuffle(reels)
+
             payout_multiplier = 0
             result_text = "❌ **꽝... 다음 기회에!**"
 
