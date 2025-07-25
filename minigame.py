@@ -148,7 +148,7 @@ def register_game_commands(bot: commands.Bot):
         elif pattern == "황금":
             reels = ["🪙", "🪙", "🪙"]
             payout_multiplier = 20
-            result_text = "🪙 **황금 매치!** 돈주머니 3개 20배 당첨!"
+            result_text = "🪙 **황금 매치!** 황금 3개 20배 당첨!"
 
         elif pattern == "과일3":
             fruit = random.choice(["🍒", "🍋", "🍇"])
@@ -274,7 +274,7 @@ def register_game_commands(bot: commands.Bot):
 
     @bot.slash_command(
     name="업다운",
-    description="1~50 숫자를 맞추는 업다운 게임!"
+    description="1~55 숫자를 맞추는 업다운 게임!"
 )
     async def 업다운(
         ctx: discord.ApplicationContext,
@@ -292,14 +292,14 @@ def register_game_commands(bot: commands.Bot):
             return
 
         # ✅ 정답 숫자 생성
-        secret_number = random.randint(1, 50)
+        secret_number = random.randint(1, 55)
         attempts = 5
 
         # ✅ 초기 embed
         embed = discord.Embed(
             title="🎯 업다운 게임 시작!",
             description=(
-                "1~50 중 하나의 숫자를 맞춰보세요!\n"
+                "1~55 중 하나의 숫자를 맞춰보세요!\n"
                 f"총 **{attempts}번의 기회**가 있습니다.\n\n"
                 "아래 버튼을 눌러 정답을 입력하세요."
             ),
@@ -709,8 +709,8 @@ class UpDownGuessModal(discord.ui.Modal):
             return
 
         guess = int(guess_str)
-        if guess < 1 or guess > 50:
-            await interaction.response.send_message("❌ 1~50 범위 내 숫자만 입력 가능합니다!", ephemeral=True)
+        if guess < 1 or guess > 55:
+            await interaction.response.send_message("❌ 1~55 범위 내 숫자만 입력 가능합니다!", ephemeral=True)
             return
 
         # ✅ 정답 비교
@@ -718,7 +718,7 @@ class UpDownGuessModal(discord.ui.Modal):
 
         if guess == self.secret:
             # ✅ 승리 → 순이익 +2배 (총 3배 반환)
-            net_result = self.view.bet_amount * 2
+            net_result = self.view.bet_amount * 1
             final_balance = self.view.balance + net_result
             update_balance(self.view.user_id, net_result, "업다운 승리")
 
@@ -726,7 +726,7 @@ class UpDownGuessModal(discord.ui.Modal):
                 title="🎯 업다운 결과",
                 description=(
                     f"정답: **{self.secret}**\n\n"
-                    f"✅ 정답입니다! +{net_result:,}코인 (배당:3.0)"
+                    f"✅ 정답입니다! +{net_result:,}코인 (배당:2)"
                 ),
                 color=discord.Color.green()
             )

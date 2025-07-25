@@ -72,7 +72,7 @@ class CasinoLobbyView(discord.ui.View):
         )
         embed.add_field(
             name="🎯 업다운",
-            value="1~50 숫자를 5번 안에 맞추면 3배!\n`/업다운 [금액]`",
+            value="1~55 숫자를 5번 안에 맞추면 2배!\n`/업다운 [금액]`",
             inline=False
         )
         embed.add_field(
