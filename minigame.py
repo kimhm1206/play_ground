@@ -206,11 +206,27 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 손익 계산
         if pattern == "폭탄":
-            # 폭탄은 보유잔액 80% 차감
-            loss = int(balance * 0.8)
+            # ✅ 기본 패널티 = 배팅금의 30배
+            penalty_by_bet = 배팅금 * 20
+            
+            # ✅ 최대 패널티 = 보유잔액의 80%
+            penalty_by_balance = int(balance * 0.8)
+            
+            # ✅ 실제 차감액 = 두 값 중 더 작은 것
+            loss = penalty_by_bet if penalty_by_bet <= penalty_by_balance else penalty_by_balance
+            
+            # ✅ 최종 잔액
             final_balance = balance - loss
             update_balance(user_id, -loss, "슬롯 폭탄 패널티")
-            result_line = f"-{loss:,}코인 (잔액 80% 차감)"
+            
+            # ✅ 안내 메시지
+            if loss == penalty_by_bet:
+                # 기본 배팅금 30배 패널티
+                result_line = f"-{loss:,}코인 (폭탄 패널티: 배팅금 20배 차감)"
+            else:
+                # 보유 잔액 80% 초과했으므로 80%만 차감
+                result_line = f"-{loss:,}코인 (잔액 80% 차감)"
+            
             color = discord.Color.dark_red()
 
         elif payout_multiplier > 0:
@@ -717,7 +733,7 @@ class UpDownGuessModal(discord.ui.Modal):
         self.view = view
 
         self.answer_input = discord.ui.InputText(
-            label="1~50 사이의 숫자를 입력하세요",
+            label="1~55 사이의 숫자를 입력하세요",
             placeholder="예: 27",
             required=True
         )
