@@ -68,7 +68,7 @@ def calculate_score(cards):
 
 def rigged_coin_result(user_choice: str) -> str:
     # ✅ 40% 확률로 유저 선택을 승리시킴
-    if random.random() < 0.43:
+    if random.random() < 0.47:
         return user_choice
     else:
         # 반대 결과 리턴

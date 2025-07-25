@@ -130,7 +130,7 @@ def register_slash_commands(bot: commands.Bot):
             return
 
         embed = discord.Embed(
-            title="💰 플그 카지노 잔액 확인",
+            title="💰 PG 카지노 잔액 확인",
             description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
             color=discord.Color.gold()
         )
@@ -153,7 +153,7 @@ def register_slash_commands(bot: commands.Bot):
             return
 
         embed = discord.Embed(
-            title="💰 플그 카지노 잔액 확인",
+            title="💰 PG 카지노 잔액 확인",
             description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
             color=discord.Color.gold()
         )
