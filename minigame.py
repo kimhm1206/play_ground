@@ -166,7 +166,7 @@ def register_game_commands(bot: commands.Bot):
         elif pattern == "폭탄":
             reels = ["💣", "💣", "💣"]
             payout_multiplier = None  # 특수 처리 → 이후 잔액 80% 차감 로직
-            result_text = "💥 **폭탄 등장! 보유 잔액 80% 차감!**"
+            result_text = "💥 **폭탄 등장! 보유 잔액 차감!**"
 
         elif pattern == "과일3":
             fruit = random.choice(["🍒", "🍋", "🍇"])
