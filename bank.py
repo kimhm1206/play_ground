@@ -15,7 +15,7 @@ class BankView(discord.ui.View):
             return
 
         await interaction.response.edit_message(
-            content=f"💳 대출 메뉴\n남은 대출 가능 금액: {self.remaining_limit:,}원\n얼마를 대출할까요?",
+            content=f"💳 대출 메뉴\n남은 대출 가능 금액: {self.remaining_limit:,}코인\n얼마를 대출할까요?",
             view=LoanView(self.user_id, self.remaining_limit),
             embed=None
         )
@@ -64,12 +64,12 @@ async def open_bank_menu(interaction: discord.Interaction):
     )
     embed.add_field(
         name="💳 총 대출 한도",
-        value=f"{info['loan_limit']:,}원 (레벨 {info['level']})",
+        value=f"{info['loan_limit']:,}코인 (레벨 {info['level']})",
         inline=False
     )
     embed.add_field(
         name="💰 현재 사용",
-        value=f"{info['total_loans']:,}원",
+        value=f"{info['total_loans']:,}코인",
         inline=False
     )
 
@@ -80,7 +80,7 @@ async def open_bank_menu(interaction: discord.Interaction):
             status_emoji = "✅" if loan["status"] == "NORMAL" else "⚠️"
             desc += (
                 f"[#{loan['loan_id']}] "
-                f"대출금: {loan['amount']:,}원 / 남은 상환금: {loan['remaining']:,}원 "
+                f"대출금: {loan['amount']:,}코인 / 남은 상환금: {loan['remaining']:,}코인 "
                 f"→ {loan['due_date']} {status_emoji}\n"
             )
         embed.add_field(name="📅 대출 내역", value=desc, inline=False)
@@ -95,7 +95,7 @@ async def open_bank_menu(interaction: discord.Interaction):
             inline=False
         )
 
-    embed.set_footer(text=f"잔액 : {info['balance']:,}원")
+    embed.set_footer(text=f"잔액 : {info['balance']:,}코인")
 
     view = BankView(user_id,info["remaining_limit"])
     await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
@@ -107,7 +107,7 @@ class LoanAmountModal(discord.ui.Modal):
         self.remaining_limit = remaining_limit
 
         self.amount_input = discord.ui.InputText(
-            label=f"얼마를 대출할까요? (남은 한도: {remaining_limit:,}원)",
+            label=f"얼마를 대출할까요? (남은 한도: {remaining_limit:,}코인)",
             placeholder="예: 50000 (숫자만 입력)",
             required=True
         )
@@ -118,7 +118,7 @@ class LoanAmountModal(discord.ui.Modal):
             amount = int(self.amount_input.value)
             if amount <= 0:
                 await interaction.response.edit_message(
-                    content="❌ 0원 이하 금액은 대출할 수 없습니다.",
+                    content="❌ 0코인 이하 금액은 대출할 수 없습니다.",
                     view=None
                 )
                 return
@@ -131,7 +131,7 @@ class LoanAmountModal(discord.ui.Modal):
                 description=result["message"],
                 color=discord.Color.gold() if result["success"] else discord.Color.red()
             )
-            embed.set_footer(text=f"잔액 : {result['balance']:,}원")
+            embed.set_footer(text=f"잔액 : {result['balance']:,}코인")
 
             # ✅ 기존 메시지 수정 (edit_message)
             await interaction.response.edit_message(embed=embed, view=None)
@@ -170,7 +170,7 @@ async def show_loan_terms(interaction: discord.Interaction, user_id: int):
     embed = discord.Embed(
         title="📜 플그 카지노 대출 설명서",
         description=(
-            "1️⃣ 대출 한도는 **레벨 × 10,000원**입니다.\n"
+            "1️⃣ 대출 한도는 **레벨 × 10,000코인**입니다.\n"
             "2️⃣ 대출 시 **이자율 10%**, 14일 내 상환 필요\n"
             "3️⃣ **대출 중 상점 이용 불가**\n"
             "4️⃣ **14일 초과 시 연체**, 추가 이자 +10% 부과\n"
@@ -193,7 +193,7 @@ class RepaySelectView(discord.ui.View):
         # ✅ 선택 메뉴 생성 (최대 25개 제한)
         options = []
         for loan in loans[:25]:
-            label = f"#{loan['loan_id']} | {loan['amount']:,}원 남은 금액:{loan['remaining']:,}원"
+            label = f"#{loan['loan_id']} | {loan['amount']:,}코인 남은 금액:{loan['remaining']:,}코인"
             desc = f"{loan['due_date']} ({loan['status']})"
             options.append(discord.SelectOption(label=label, description=desc, value=str(loan['loan_id'])))
 
@@ -226,7 +226,7 @@ class RepayAmountModal(discord.ui.Modal):
             repay_amount = int(self.repay_input.value)
             if repay_amount <= 0:
                 await interaction.response.edit_message(
-                    content="❌ 0원 이하 금액은 상환할 수 없습니다.",
+                    content="❌ 0코인 이하 금액은 상환할 수 없습니다.",
                     view=None
                 )
                 return
@@ -238,7 +238,7 @@ class RepayAmountModal(discord.ui.Modal):
                 description=result["message"],
                 color=discord.Color.green() if result["success"] else discord.Color.red()
             )
-            embed.set_footer(text=f"잔액 : {result['balance']:,}원")
+            embed.set_footer(text=f"잔액 : {result['balance']:,}코인")
             await interaction.response.edit_message(embed=embed, view=None)
 
         except ValueError:

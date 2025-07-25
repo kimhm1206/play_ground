@@ -18,11 +18,11 @@ def register_game_commands(bot: commands.Bot):
         amount = 배팅금
         # ✅ 베팅 가능 여부 체크
         if amount < 500:
-            await ctx.respond("❌ 베팅 금액은 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 500코인 이상이어야 합니다!", ephemeral=True)
             return
 
         if balance < amount:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 첫 번째 주사위 굴림
@@ -35,7 +35,7 @@ def register_game_commands(bot: commands.Bot):
             description=f"첫 번째 주사위: **{first_emoji}**\n\n홀짝을 선택하세요!",
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {amount:,}원")
+        embed.set_footer(text=f"베팅 금액: {amount:,}코인")
 
         view = HolJjakButtonView(
             user_id=user_id,
@@ -58,11 +58,11 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 <= 500:
-            await ctx.respond("❌ 베팅 금액은 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 500코인 이상이어야 합니다!", ephemeral=True)
             return
 
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 배당 안내 자동 생성
@@ -83,7 +83,7 @@ def register_game_commands(bot: commands.Bot):
             ),
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {배팅금:,}원")
+        embed.set_footer(text=f"베팅 금액: {배팅금:,}코인")
 
         # ✅ 버튼 뷰 생성
         view = DiceSumView(user_id, 배팅금, balance)
@@ -102,57 +102,113 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
-            await ctx.respond("❌ 베팅 금액은 최소 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
             return
 
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
-        # ✅ 슬롯 돌리기 (3개 심볼 랜덤)
-        reels = [random.choice(SLOT_SYMBOLS) for _ in range(3)]
-
-        # ✅ 패턴 판정
+        # ✅ 1~1000 난수 생성
+        roll = random.randint(1, 1000)
+        pattern = None
         payout_multiplier = 0
         result_text = ""
+        reels = []
 
-        if reels[0] == reels[1] == reels[2]:  # 3개 일치
-            if reels[0] == JACKPOT_SYMBOL:
-                payout_multiplier = 50  # 잭팟
-                result_text = "🎉 **JACKPOT!** 👑👑👑 대박 당첨!"
-            else:
-                payout_multiplier = 20  # 일반 3개 일치
-                result_text = f"✅ 3개 일치! ({reels[0]})"
+        # ✅ 패턴 결정
+        if roll == 1:
+            pattern = "잭팟"
+        elif roll <= 3:
+            pattern = "다이아"
+        elif roll <= 6:
+            pattern = "황금"
+        elif roll <= 10:
+            pattern = "과일3"
+        elif roll <= 40:
+            pattern = "과일모둠"
+        elif roll == 41:
+            pattern = "폭탄"
+        elif roll <= 410:
+            pattern = "두개매치"
+        else:
+            pattern = "꽝"
 
-        elif reels[0] == reels[1] or reels[1] == reels[2] or reels[0] == reels[2]:  # 2개 일치
+        # ✅ 패턴별 그림 + 배당 설정
+        if pattern == "잭팟":
+            reels = ["👑", "👑", "👑"]
+            payout_multiplier = 50
+            result_text = "🎉 **JACKPOT!** 👑👑👑 50배 당첨!"
+
+        elif pattern == "다이아":
+            reels = ["💎", "💎", "💎"]
+            payout_multiplier = 30
+            result_text = "💎 **보석 매치!** 다이아 3개 30배 당첨!"
+
+        elif pattern == "황금":
+            reels = ["🪙", "🪙", "🪙"]
+            payout_multiplier = 20
+            result_text = "🪙 **황금 매치!** 돈주머니 3개 20배 당첨!"
+
+        elif pattern == "과일3":
+            fruit = random.choice(["🍒", "🍋", "🍇"])
+            reels = [fruit, fruit, fruit]
+            payout_multiplier = 10
+            result_text = f"{fruit} **과일 매치! 3개 10배!**"
+
+        elif pattern == "과일모둠":
+            reels = ["🍒", "🍋", "🍇"]
+            random.shuffle(reels)
+            payout_multiplier = 6
+            result_text = "🍒🍋🍇 **과일 모둠 매치! 6배 당첨!**"
+
+        elif pattern == "폭탄":
+            reels = ["💣", "💣", "💣"]
+            payout_multiplier = None  # 특수 처리
+            result_text = "💥 **폭탄 등장! 보유 잔액 80% 차감!**"
+
+        elif pattern == "두개매치":
+            # 2개만 일치하는 랜덤 (전체 심볼 포함)
+            base = random.choice(ALL_SYMBOLS)
+            other = random.choice([s for s in ALL_SYMBOLS if s != base])
+            reels = [base, base, other]
+            random.shuffle(reels)
             payout_multiplier = 2
-            result_text = "✅ 2개 일치!"
+            result_text = "✅ **2개 일치! 2배!**"
 
-        else:
+        else:  # 기본 꽝
+            # 전부 다 다른 심볼 (전체 심볼 포함)
+            reels = random.sample(ALL_SYMBOLS, 3)
             payout_multiplier = 0
-            result_text = "❌ 꽝... 다음 기회에!"
+            result_text = "❌ **꽝... 다음 기회에!**"
 
-        # ✅ 순손익(net_result) 계산
-        if payout_multiplier > 0:
-            # 순이익 = 배팅금 * (배당 - 1)
+        # ✅ 손익 계산
+        if pattern == "폭탄":
+            # 폭탄은 보유잔액 80% 차감
+            loss = int(balance * 0.8)
+            final_balance = balance - loss
+            update_balance(user_id, -loss, "슬롯 폭탄 패널티")
+            result_line = f"-{loss:,}코인 (잔액 80% 차감)"
+            color = discord.Color.dark_red()
+
+        elif payout_multiplier > 0:
             net_result = 배팅금 * (payout_multiplier - 1)
+            final_balance = balance + net_result
+            update_balance(user_id, net_result, f"슬롯 {pattern} 당첨")
 
-            # 승리 메시지 (배당 2배 초과일 때만 표시)
+            # 배당 표시 (2배 초과만)
             if payout_multiplier > 2:
-                result_line = f"+{net_result:,}원 (배당:{payout_multiplier:.1f})"
+                result_line = f"+{net_result:,}코인 (배당:{payout_multiplier})"
             else:
-                result_line = f"+{net_result:,}원"
-
+                result_line = f"+{net_result:,}코인"
             color = discord.Color.green()
-        else:
-            # 패배 → 순손실 -배팅금
-            net_result = -배팅금
-            result_line = f"-{배팅금:,}원"
-            color = discord.Color.red()
 
-        # ✅ DB 1회 업데이트
-        final_balance = balance + net_result
-        update_balance(user_id, net_result, f"슬롯머신 결과")
+        elif payout_multiplier == 0:  # 꽝
+            net_result = -배팅금
+            final_balance = balance - 배팅금
+            update_balance(user_id, net_result, "슬롯 꽝")
+            result_line = f"-{배팅금:,}코인"
+            color = discord.Color.red()
 
         # ✅ 결과 Embed
         embed = discord.Embed(
@@ -163,7 +219,7 @@ def register_game_commands(bot: commands.Bot):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         await ctx.respond(embed=embed)
 
@@ -180,10 +236,10 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 최소 베팅 체크
         if 배팅금 < 500:
-            await ctx.respond("❌ 최소 베팅 금액은 500원입니다!", ephemeral=True)
+            await ctx.respond("❌ 최소 베팅 금액은 500코인입니다!", ephemeral=True)
             return
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 초기 카드 배분
@@ -204,11 +260,11 @@ def register_game_commands(bot: commands.Bot):
                     f"당신: {' '.join(player_cards)} (21)\n"
                     f"딜러: {' '.join(dealer_cards)} ({dealer_score})\n\n"
                     f"🎉 **BLACKJACK! 즉시 승리!**\n"
-                    f"+{payout:,}원 (배당 x2.7)"
+                    f"+{payout:,}코인 (배당 x2.7)"
                 ),
                 color=discord.Color.green()
             )
-            embed.set_footer(text=f"잔액: {balance + payout:,}원")
+            embed.set_footer(text=f"잔액: {balance + payout:,}코인")
             await ctx.respond(embed=embed)
             return
 
@@ -229,10 +285,10 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
-            await ctx.respond("❌ 베팅 금액은 최소 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
             return
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 정답 숫자 생성
@@ -249,7 +305,7 @@ def register_game_commands(bot: commands.Bot):
             ),
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {배팅금:,}원")
+        embed.set_footer(text=f"베팅 금액: {배팅금:,}코인")
 
         # ✅ View 생성 (게임 상태 저장)
         view = UpDownView(
@@ -274,10 +330,10 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
-            await ctx.respond("❌ 베팅 금액은 최소 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
             return
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 초기 안내 embed
@@ -290,7 +346,7 @@ def register_game_commands(bot: commands.Bot):
             ),
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {배팅금:,}원")
+        embed.set_footer(text=f"베팅 금액: {배팅금:,}코인")
 
         # ✅ View 생성 (게임 상태 저장)
         view = HorseRaceView(
@@ -313,10 +369,10 @@ def register_game_commands(bot: commands.Bot):
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
-            await ctx.respond("❌ 베팅 금액은 최소 500원 이상이어야 합니다!", ephemeral=True)
+            await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
             return
         if balance < 배팅금:
-            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}원", ephemeral=True)
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
             return
 
         # ✅ 초기 안내 embed
@@ -327,7 +383,7 @@ def register_game_commands(bot: commands.Bot):
             ),
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {배팅금:,}원")
+        embed.set_footer(text=f"베팅 금액: {배팅금:,}코인")
 
         # ✅ View 생성
         view = CoinFlipView(
@@ -382,15 +438,15 @@ class DiceButton(discord.ui.Button):
 
             # 배당 표시 (2배 초과일 때만)
             if multiplier > 2:
-                result_text = f"✅ 승리! +{net_result:,}원 (배당:{multiplier:.1f})"
+                result_text = f"✅ 승리! +{net_result:,}코인 (배당:{multiplier:.1f})"
             else:
-                result_text = f"✅ 승리! +{net_result:,}원"
+                result_text = f"✅ 승리! +{net_result:,}코인"
 
         else:
             # 패배 → 순손익 = -베팅금
             net_result = -view.bet_amount
             color = discord.Color.red()
-            result_text = f"❌ 패배... -{view.bet_amount:,}원 (결과: {result_sum})"
+            result_text = f"❌ 패배... -{view.bet_amount:,}코인 (결과: {result_sum})"
 
         # ✅ 최종 잔액 계산 & DB 1회 업데이트
         final_balance = view.balance + net_result
@@ -405,7 +461,7 @@ class DiceButton(discord.ui.Button):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         # ✅ 버튼 비활성화 후 결과 표시
         view.disable_all_items()
@@ -424,7 +480,7 @@ class CancelButton(discord.ui.Button):
             description="베팅이 취소되었습니다.",
             color=discord.Color.greyple()
         )
-        embed.set_footer(text=f"잔액: {view.balance:,}원")
+        embed.set_footer(text=f"잔액: {view.balance:,}코인")
 
         await interaction.response.edit_message(embed=embed, view=None)
 
@@ -468,12 +524,12 @@ class HolJjakButtonView(discord.ui.View):
         if win:
             update_balance(self.user_id, self.bet_amount)
             color = discord.Color.green()
-            result_text = f"✅ 승리! +{self.bet_amount:,}원"
+            result_text = f"✅ 승리! +{self.bet_amount:,}코인"
             final_balance = self.balance + self.bet_amount
         else:
             update_balance(self.user_id, -self.bet_amount)
             color = discord.Color.red()
-            result_text = f"❌ 패배... -{self.bet_amount:,}원"
+            result_text = f"❌ 패배... -{self.bet_amount:,}코인"
             final_balance = self.balance - self.bet_amount
 
         # ✅ 최종 결과 embed
@@ -485,7 +541,7 @@ class HolJjakButtonView(discord.ui.View):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         await interaction.response.edit_message(embed=embed, view=None)
 
@@ -522,7 +578,7 @@ class BlackjackView(discord.ui.View):
             ),
             color=discord.Color.blurple()
         )
-        embed.set_footer(text=f"베팅 금액: {self.bet_amount:,}원")
+        embed.set_footer(text=f"베팅 금액: {self.bet_amount:,}코인")
         return embed
 
     @discord.ui.button(label="히트", style=discord.ButtonStyle.green)
@@ -542,11 +598,11 @@ class BlackjackView(discord.ui.View):
                 description=(
                     f"**당신:** {' '.join(self.player_cards)} (합계 {score})\n\n"
                     f"❌ **버스트! 21 초과로 패배...**\n"
-                    f"-{self.bet_amount:,}원"
+                    f"-{self.bet_amount:,}코인"
                 ),
                 color=discord.Color.red()
             )
-            embed.set_footer(text=f"잔액: {final_balance:,}원")
+            embed.set_footer(text=f"잔액: {final_balance:,}코인")
             await interaction.response.edit_message(embed=embed, view=None)
         else:
             # 아직 진행 가능 → 다시 히트/스탠드 선택
@@ -572,9 +628,9 @@ class BlackjackView(discord.ui.View):
 
             # 배당 표시 (기본 2배면 표시 안 함)
             if multiplier > 2:
-                result_line = f"+{net_result:,}원 (배당:{multiplier:.1f})"
+                result_line = f"+{net_result:,}코인 (배당:{multiplier:.1f})"
             else:
-                result_line = f"+{net_result:,}원"
+                result_line = f"+{net_result:,}코인"
 
             result_text = f"✅ 승리! {result_line}"
 
@@ -588,7 +644,7 @@ class BlackjackView(discord.ui.View):
             # 패배 → 순손실 -bet_amount
             net_result = -self.bet_amount
             color = discord.Color.red()
-            result_text = f"❌ 패배... -{self.bet_amount:,}원"
+            result_text = f"❌ 패배... -{self.bet_amount:,}코인"
 
         # ✅ DB 1회 업데이트
         final_balance = self.balance + net_result
@@ -603,7 +659,7 @@ class BlackjackView(discord.ui.View):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         await interaction.response.edit_message(embed=embed, view=None)
 
@@ -668,11 +724,11 @@ class UpDownGuessModal(discord.ui.Modal):
                 title="🎯 업다운 결과",
                 description=(
                     f"정답: **{self.secret}**\n\n"
-                    f"✅ 정답입니다! +{net_result:,}원 (배당:3.0)"
+                    f"✅ 정답입니다! +{net_result:,}코인 (배당:3.0)"
                 ),
                 color=discord.Color.green()
             )
-            embed.set_footer(text=f"잔액: {final_balance:,}원")
+            embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
             # 버튼 비활성화
             self.view.disable_all_items()
@@ -695,11 +751,11 @@ class UpDownGuessModal(discord.ui.Modal):
                 title="🎯 업다운 결과",
                 description=(
                     f"정답은 **{self.secret}** 이었습니다!\n\n"
-                    f"❌ 패배... -{self.view.bet_amount:,}원"
+                    f"❌ 패배... -{self.view.bet_amount:,}코인"
                 ),
                 color=discord.Color.red()
             )
-            embed.set_footer(text=f"잔액: {final_balance:,}원")
+            embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
             self.view.disable_all_items()
             await interaction.response.edit_message(embed=embed, view=None)
@@ -752,12 +808,12 @@ class HorseButton(discord.ui.Button):
             # 승리 → 순이익 +2배
             net_result = view.bet_amount * 2
             color = discord.Color.green()
-            result_text = f"✅ {winning_horse}번말이 1등으로 들어왔습니다!\n+{net_result:,}원 (배당:3.0)"
+            result_text = f"✅ {winning_horse}번말이 1등으로 들어왔습니다!\n+{net_result:,}코인 (배당:3.0)"
         else:
             # 패배 → 순손실 -1배
             net_result = -view.bet_amount
             color = discord.Color.red()
-            result_text = f"❌ 아쉽습니다! {winning_horse}번말이 승리했습니다.\n-{view.bet_amount:,}원"
+            result_text = f"❌ 아쉽습니다! {winning_horse}번말이 승리했습니다.\n-{view.bet_amount:,}코인"
 
         # ✅ 최종 잔액 계산 & DB 1회 업데이트
         final_balance = view.balance + net_result
@@ -772,7 +828,7 @@ class HorseButton(discord.ui.Button):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         # ✅ 버튼 비활성화 후 결과 표시
         view.disable_all_items()
@@ -809,14 +865,14 @@ class CoinFlipView(discord.ui.View):
             final_balance = self.balance + net_result
             update_balance(self.user_id, net_result, "동전던지기 승리")
             color = discord.Color.green()
-            result_text = f"✅ 맞췄습니다! +{net_result:,}원"
+            result_text = f"✅ 맞췄습니다! +{net_result:,}코인"
         else:
             # 패배 → 순손실 -bet_amount
             net_result = -self.bet_amount
             final_balance = self.balance + net_result
             update_balance(self.user_id, net_result, "동전던지기 패배")
             color = discord.Color.red()
-            result_text = f"❌ 틀렸습니다! -{self.bet_amount:,}원"
+            result_text = f"❌ 틀렸습니다! -{self.bet_amount:,}코인"
 
         embed = discord.Embed(
             title="🪙 동전던지기 결과",
@@ -826,7 +882,7 @@ class CoinFlipView(discord.ui.View):
             ),
             color=color
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}원")
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
 
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)

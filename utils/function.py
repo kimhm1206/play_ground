@@ -199,7 +199,7 @@ def give_daily_money(user_id: int) -> dict:
     cur.execute("SELECT balance, last_donzoo_date FROM casino_users WHERE user_id=%s", (user_id,))
     row = cur.fetchone()
 
-    # 신규 유저면 2만원 지급
+    # 신규 유저면 2만코인 지급
     if not row:
         cur.execute("""
             INSERT INTO casino_users (user_id, balance, last_donzoo_date)
@@ -217,7 +217,7 @@ def give_daily_money(user_id: int) -> dict:
         conn.close()
         return {
             "success": True,
-            "message": f"🎉 플그 카지노 첫 방문 환영!\n💸 일당 **20,000원** + 첫 방문 **10,000원** 지급 완료!",
+            "message": f"🎉 PG 카지노 첫 방문 환영!\n💸 일당 **20,000코인** + 첫 방문 **10,000코인** 지급 완료!",
             "amount": 30000,
             "balance": 30000
         }
@@ -235,7 +235,7 @@ def give_daily_money(user_id: int) -> dict:
             "balance": balance
         }
 
-    # 보유금 ≥ 20만원이면 1만원만 지급
+    # 보유금 ≥ 20만코인이면 1만코인만 지급
     지급금 = 10000 if balance >= 200_000 else 20000
 
     # UPDATE (잔액 + 날짜 갱신)
@@ -259,7 +259,7 @@ def give_daily_money(user_id: int) -> dict:
     new_balance = balance + 지급금
     return {
         "success": True,
-        "message": f"💸 오늘 일당 **{지급금:,}원** 지급 완료!\n현재 보유금: **{new_balance:,}원**",
+        "message": f"💸 오늘 일당 **{지급금:,}코인** 지급 완료!\n현재 보유금: **{new_balance:,}코인**",
         "amount": 지급금,
         "balance": new_balance
     }
@@ -269,7 +269,7 @@ def get_bank_info(user_id: int) -> dict:
     유저 은행 정보 조회
     - balance는 casino_users에서
     - level은 voice_leaderboard에서
-    - 대출 한도는 레벨 × 10,000 (원금 기준)
+    - 대출 한도는 레벨 × 10,000 (코인금 기준)
     """
     conn = get_connection()
     cur = conn.cursor()
@@ -301,7 +301,7 @@ def get_bank_info(user_id: int) -> dict:
     lvl_row = cur.fetchone()
     level = lvl_row[0] if lvl_row else 1  # 없으면 기본 1레벨
 
-    # ✅ 대출 내역 가져오기 (원금과 상환금 모두)
+    # ✅ 대출 내역 가져오기 (코인금과 상환금 모두)
     cur.execute("""
         SELECT loan_id, amount, remaining_amount, due_date, status 
         FROM casino_loans 
@@ -311,17 +311,17 @@ def get_bank_info(user_id: int) -> dict:
     loans = cur.fetchall()
 
     loan_list = []
-    total_loan_principal = 0  # 원금 합산
+    total_loan_principal = 0  # 코인금 합산
     overdue_flag = False
 
     for loan_id, amount, remain, due_date, status in loans:
-        total_loan_principal += amount  # ✅ 한도 계산엔 원금만
+        total_loan_principal += amount  # ✅ 한도 계산엔 코인금만
         if status in ("OVERDUE", "LONG_OVERDUE"):
             overdue_flag = True
 
         loan_list.append({
             "loan_id": loan_id,
-            "amount": amount,                 # 원금
+            "amount": amount,                 # 코인금
             "remaining": remain,              # 이자 포함 상환금
             "due_date": due_date.strftime("%m월 %d일"),
             "status": status
@@ -329,17 +329,17 @@ def get_bank_info(user_id: int) -> dict:
 
     conn.close()
 
-    # ✅ 총 대출 한도 = 레벨 × 10,000 (원금만 기준)
+    # ✅ 총 대출 한도 = 레벨 × 10,000 (코인금만 기준)
     loan_limit = level * 10000
 
-    # ✅ 남은 대출 가능 금액 (원금 기준)
+    # ✅ 남은 대출 가능 금액 (코인금 기준)
     remaining_limit = max(0, loan_limit - total_loan_principal)
 
     return {
         "balance": balance,                 # 현재 잔액
         "level": level,                     # 레벨
-        "loan_limit": loan_limit,           # 총 한도 (원금)
-        "total_loans": total_loan_principal,# 현재 사용 중 대출 원금 합계
+        "loan_limit": loan_limit,           # 총 한도 (코인금)
+        "total_loans": total_loan_principal,# 현재 사용 중 대출 코인금 합계
         "remaining_limit": remaining_limit, # 남은 대출 가능 금액
         "loans": loan_list,                 # 대출 상세 내역
         "overdue": overdue_flag             # 연체 여부
@@ -362,7 +362,7 @@ def loan_money(user_id: int, amount: int) -> dict:
     level = lvl_row[0] if lvl_row else 1
     loan_limit = level * 10000
 
-    # ✅ 현재 사용 중 대출 합계 (원금 기준)
+    # ✅ 현재 사용 중 대출 합계 (코인금 기준)
     cur.execute("""
         SELECT COALESCE(SUM(amount),0) 
         FROM casino_loans 
@@ -388,7 +388,7 @@ def loan_money(user_id: int, amount: int) -> dict:
         conn.close()
         return {
             "success": False,
-            "message": f"❌ 대출 불가! 한도 {loan_limit:,}원 / 이미 {used_loans:,}원 사용 중",
+            "message": f"❌ 대출 불가! 한도 {loan_limit:,}코인 / 이미 {used_loans:,}코인 사용 중",
             "balance": balance_before
         }
 
@@ -425,9 +425,9 @@ def loan_money(user_id: int, amount: int) -> dict:
     return {
         "success": True,
         "message": (
-            f"💳 {amount:,}원 대출 완료!\n"
+            f"💳 {amount:,}코인 대출 완료!\n"
             f"14일 내 상환 필요, 기한은 **{due_date.strftime('%m월 %d일 00시 00분')}** 까지입니다.\n"
-            f"총 상환금은 **{repay_amount:,}원** 입니다."
+            f"총 상환금은 **{repay_amount:,}코인** 입니다."
         ),
         "balance": new_balance
     }
@@ -507,7 +507,7 @@ def repay_loan(user_id: int, loan_id: int, repay_amount: int) -> dict:
             SET remaining_amount=%s
             WHERE loan_id=%s
         """, (new_remaining, loan_id))
-        msg_detail = f"✅ 일부 상환되었습니다. 남은 상환금: {new_remaining:,}원"
+        msg_detail = f"✅ 일부 상환되었습니다. 남은 상환금: {new_remaining:,}코인"
 
     # ✅ balance 차감
     cur.execute("""
@@ -530,7 +530,7 @@ def repay_loan(user_id: int, loan_id: int, repay_amount: int) -> dict:
 
     return {
         "success": True,
-        "message": f"💸 {repay_amount:,}원 상환 완료!\n{msg_detail}",
+        "message": f"💸 {repay_amount:,}코인 상환 완료!\n{msg_detail}",
         "balance": new_balance
     }
     
@@ -561,20 +561,12 @@ def update_balance(user_id: int, change: int, description: str = "게임 베팅 
     cur.execute("SELECT balance FROM casino_users WHERE user_id=%s", (user_id,))
     row = cur.fetchone()
 
-    if not row:
-        # 신규 유저면 0원으로 등록 후 반영
-        cur.execute("""
-            INSERT INTO casino_users (user_id, balance, last_donzoo_date)
-            VALUES (%s, %s, NULL)
-        """, (user_id, 0))
-        current_balance = 0
-    else:
-        current_balance = row[0]
+    current_balance = row[0]
 
     # ✅ balance 증감
     new_balance = current_balance + change
     if new_balance < 0:
-        new_balance = 0  # 마이너스 방지 (원하면 그대로 허용 가능)
+        new_balance = 0  # 마이너스 방지 (코인하면 그대로 허용 가능)
 
     cur.execute("""
         UPDATE casino_users
@@ -582,11 +574,11 @@ def update_balance(user_id: int, change: int, description: str = "게임 베팅 
         WHERE user_id = %s
     """, (new_balance, user_id))
 
-    # ✅ 거래 로그 기록
-    cur.execute("""
-        INSERT INTO casino_transactions (user_id, type, amount, description, created_at)
-        VALUES (%s, 'GAME', %s, %s, %s)
-    """, (user_id, change, description, now))
+    # # ✅ 거래 로그 기록
+    # cur.execute("""
+    #     INSERT INTO casino_transactions (user_id, type, amount, description, created_at)
+    #     VALUES (%s, 'GAME', %s, %s, %s)
+    # """, (user_id, change, description, now))
 
     conn.commit()
     cur.close()

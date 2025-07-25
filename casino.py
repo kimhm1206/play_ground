@@ -12,11 +12,11 @@ class CasinoLobbyView(discord.ui.View):
 
         # ✅ 임베드 생성
         embed = discord.Embed(
-            title="💸 플그 카지노 일당 지급",
+            title="💸 PG 카지노 일당 지급",
             description=result["message"],
             color=discord.Color.gold()
         )
-        embed.set_footer(text=f"잔액 : {result['balance']:,}원")
+        embed.set_footer(text=f"잔액 : {result['balance']:,}코인")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -31,8 +31,8 @@ class CasinoLobbyView(discord.ui.View):
     @discord.ui.button(label="🎮 게임설명", style=discord.ButtonStyle.secondary)
     async def game_info_button(self, button: discord.ui.Button, interaction: discord.Interaction):
         embed = discord.Embed(
-            title="🎮 플그 카지노 게임 가이드",
-            description="플그 카지노에서 즐길 수 있는 게임 목록과 설명입니다!\n**게임은 아래 카지노 채널에서 이용해주세요!**",
+            title="🎮 PG 카지노 게임 가이드",
+            description="PG 카지노에서 즐길 수 있는 게임 목록과 설명입니다!\n**게임은 아래 카지노 채널에서 이용해주세요!**",
             color=discord.Color.gold()
         )
 
@@ -48,7 +48,17 @@ class CasinoLobbyView(discord.ui.View):
         )
         embed.add_field(
             name="🎰 슬롯머신",
-            value="2개 이상 심볼이 맞으면 당첨!\n`/슬롯 [금액]`\n2개=2배, 3개=20배, 잭팟👑=50배!",
+            value=(
+                "`/슬롯 [금액]`\n\n"
+                "✅ **2개 일치 → 2배**\n"
+                "🍒🍋🍇 **과일 모둠 → 6배**\n"
+                "🍒🍒🍒 **과일 3개 동일 → 10배**\n"
+                "🪙🪙🪙 **황금 3개 → 20배**\n"
+                "💎💎💎 **다이아 3개 → 30배**\n"
+                "👑👑👑 **잭팟 → 50배!**\n"
+                "💣💣💣 **폭탄 → 보유 잔액 80% 차감!**\n\n"
+                "❌ 나머지는 꽝 (배팅금 손실)"
+            ),
             inline=False
         )
         embed.add_field(
@@ -77,7 +87,7 @@ class CasinoLobbyView(discord.ui.View):
             inline=False
         )
 
-        embed.set_footer(text="베팅은 최소 500원부터 가능합니다!")
+        embed.set_footer(text="베팅은 최소 500코인부터 가능합니다!")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -91,7 +101,7 @@ class CasinoLobbyView(discord.ui.View):
             return
 
         embed = discord.Embed(
-            title="📊 플그 카지노 랭킹 TOP 5",
+            title="📊 PG 카지노 랭킹 TOP 5",
             description="현재 **잔액 기준** 상위 5명입니다!",
             color=discord.Color.gold()
         )
@@ -103,7 +113,7 @@ class CasinoLobbyView(discord.ui.View):
             name = member.nick or member.display_name if member else f"Unknown({uid})"
             embed.add_field(
                 name=f"{medals[idx]} {name}",
-                value=f"💰 {bal:,}원",
+                value=f"💰 {bal:,}코인",
                 inline=False
             )
 
@@ -122,9 +132,9 @@ async def send_casino_lobby(bot: discord.Client):
             await msg.delete()
 
     embed = discord.Embed(
-    title="🎰 **플그 카지노 로비**",
+    title="🎰 **PG 카지노 로비**",
     description=(
-        "💎 **어서오세요! 플그 카지노입니다.**\n\n"
+        "💎 **어서오세요! PG 카지노입니다.**\n\n"
         "━━━━━━━━━━━━━━━\n"
         "💸 **일당** → 하루 일당 받기\n"
         "🏦 **은행** → 대출 / 상환 관리\n"
@@ -140,4 +150,4 @@ async def send_casino_lobby(bot: discord.Client):
     embed.set_footer(text="✨ Developed by 배액호오")
     view = CasinoLobbyView()
     await channel.send(embed=embed, view=view)
-    print("✅ 플그 카지노 로비 생성 완료!")
+    print("✅ PG 카지노 로비 생성 완료!")
