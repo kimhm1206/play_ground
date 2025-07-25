@@ -671,6 +671,8 @@ class UpDownView(discord.ui.View):
         self.attempts_left = attempts_left
         self.bet_amount = bet_amount
         self.balance = balance
+        self.guess_history = []  # ✅ [(숫자, hint)] 형태로 저장
+
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.user_id:
@@ -737,9 +739,14 @@ class UpDownGuessModal(discord.ui.Modal):
 
         # ✅ 틀림 → 힌트 & 남은 기회 확인
         if guess < self.secret:
-            hint = "정답은 더 **높습니다** ⬆️"
+            hint = "⬆️ 더 높습니다"
         else:
-            hint = "정답은 더 **낮습니다** ⬇️"
+            hint = "⬇️ 더 낮습니다"
+
+        # ✅ 기록 추가
+        if not hasattr(self.view, "guess_history"):
+            self.view.guess_history = []
+        self.view.guess_history.append((guess, hint))
 
         if self.view.attempts_left <= 0:
             # ✅ 기회 소진 → 패배
@@ -747,11 +754,17 @@ class UpDownGuessModal(discord.ui.Modal):
             final_balance = self.view.balance + net_result
             update_balance(self.view.user_id, net_result, "업다운 패배")
 
+            # ✅ 힌트 기록 출력
+            history_text = "\n".join(
+                [f"➡️ {g} {h}" for g, h in self.view.guess_history]
+            )
+
             embed = discord.Embed(
                 title="🎯 업다운 결과",
                 description=(
                     f"정답은 **{self.secret}** 이었습니다!\n\n"
-                    f"❌ 패배... -{self.view.bet_amount:,}코인"
+                    f"❌ 패배... -{self.view.bet_amount:,}코인\n\n"
+                    f"📜 **입력 기록**\n{history_text}"
                 ),
                 color=discord.Color.red()
             )
@@ -762,12 +775,18 @@ class UpDownGuessModal(discord.ui.Modal):
 
         else:
             # ✅ 아직 기회 남음 → 힌트 주고 다시 버튼 유지
+            # ✅ 힌트 기록 문자열 생성
+            history_text = "\n".join(
+                [f"➡️ {g} {h}" for g, h in self.view.guess_history]
+            )
+
             embed = discord.Embed(
                 title="🎯 업다운 게임",
                 description=(
                     f"❌ **{guess}** 는 정답이 아닙니다!\n"
                     f"{hint}\n\n"
-                    f"남은 기회: **{self.view.attempts_left}**회\n"
+                    f"남은 기회: **{self.view.attempts_left}**회\n\n"
+                    f"📜 **입력 기록**\n{history_text}\n\n"
                     "정답 입력 버튼을 다시 눌러주세요."
                 ),
                 color=discord.Color.orange()

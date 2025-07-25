@@ -225,15 +225,16 @@ def give_daily_money(user_id: int) -> dict:
     balance, last_donzoo_date = row
 
     # 오늘 이미 받았다면 실패
-    if last_donzoo_date == today:
-        cur.close()
-        conn.close()
-        return {
-            "success": False,
-            "message": "❌ 오늘은 이미 **돈줘**를 받았습니다. 내일 다시 시도하세요!",
-            "amount": 0,
-            "balance": balance
-        }
+    
+    # if last_donzoo_date == today:
+    #     cur.close()
+    #     conn.close()
+    #     return {
+    #         "success": False,
+    #         "message": "❌ 오늘은 이미 **돈줘**를 받았습니다. 내일 다시 시도하세요!",
+    #         "amount": 0,
+    #         "balance": balance
+    #     }
 
     # 보유금 ≥ 20만코인이면 1만코인만 지급
     지급금 = 10000 if balance >= 200_000 else 20000
