@@ -203,7 +203,7 @@ def give_daily_money(user_id: int) -> dict:
     if not row:
         cur.execute("""
             INSERT INTO casino_users (user_id, balance, last_donzoo_date)
-            VALUES (%s, %s, %s, %s)
+            VALUES (%s, %s, %s)
         """, (user_id, 30000, today))
 
         # 거래 로그
