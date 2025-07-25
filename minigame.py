@@ -117,29 +117,42 @@ def register_game_commands(bot: commands.Bot):
         reels = []
 
         # ✅ 패턴 결정 (확률 기반)
-        if roll <= 2:                      # 0.2%
+        if roll <= 1:        
             pattern = "잭팟"
-        elif roll <= 5:                    # 0.3%
+        elif roll <= 10:              
             pattern = "다이아"
-        elif roll <= 10:                   # 0.5%
+        elif roll <= 20:                
             pattern = "황금"
-        elif roll <= 20:                   # 1.0%
+        elif roll <= 50:                 
             pattern = "폭탄"
-        elif roll <= 30:                   # 1.0%
+        elif roll <= 80:               
             pattern = "과일3"
-        elif roll <= 70:                   # 4.0%
+        elif roll <= 130:                
             pattern = "과일모둠"
-        elif roll <= 620:                  # 55.0%
+        elif roll <= 660:               
             pattern = "꽝"
-        else:                              # 나머지(38%)
+        else:                       
             pattern = "두개매치"
 
         # ✅ 패턴별 그림 + 배당 설정
         if pattern == "잭팟":
             reels = ["👑", "👑", "👑"]
-            payout_multiplier = 50
-            result_text = "🎉 **JACKPOT!** 👑👑👑 50배 당첨!"
+            payout_multiplier = 100
+            result_text = "🎉 **JACKPOT!** 👑👑👑 100배 당첨!"
 
+            # ✅ 잭팟 당첨 공지 보내기
+            jackpot_channel = bot.get_channel(JACKPOT_CHANNEL_ID)
+            if jackpot_channel:
+                jackpot_embed = discord.Embed(
+                    title="💥 JACKPOT 당첨 💥",
+                    description=f"🎉 {ctx.author.mention} 님이 **잭팟을 터뜨렸습니다!**\n\n"
+                                f"**당첨금:** `{배팅금 * payout_multiplier:,}코인`\n"
+                                f"축하드립니다! 🎊",
+                    color=discord.Color.gold()
+                )
+                jackpot_embed.set_footer(text=f"배팅금: {배팅금:,}코인")
+                await jackpot_channel.send(embed=jackpot_embed)
+                
         elif pattern == "다이아":
             reels = ["💎", "💎", "💎"]
             payout_multiplier = 30
