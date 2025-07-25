@@ -125,11 +125,11 @@ def register_game_commands(bot: commands.Bot):
             pattern = "황금"
         elif roll <= 50:                 
             pattern = "폭탄"
-        elif roll <= 80:               
+        elif roll <= 70:               
             pattern = "과일3"
-        elif roll <= 130:                
+        elif roll <= 100:                
             pattern = "과일모둠"
-        elif roll <= 660:               
+        elif roll <= 650:               
             pattern = "꽝"
         else:                       
             pattern = "두개매치"
