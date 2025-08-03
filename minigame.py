@@ -756,7 +756,7 @@ class UpDownGuessModal(discord.ui.Modal):
 
         if guess == self.secret:
             # ✅ 승리 → 순이익 +2배 (총 3배 반환)
-            net_result = self.view.bet_amount * 1
+            net_result = self.view.bet_amount * 1.5
             final_balance = self.view.balance + net_result
             update_balance(self.view.user_id, net_result, "업다운 승리")
 
@@ -764,7 +764,7 @@ class UpDownGuessModal(discord.ui.Modal):
                 title="🎯 업다운 결과",
                 description=(
                     f"정답: **{self.secret}**\n\n"
-                    f"✅ 정답입니다! +{net_result:,}코인 (배당:2)"
+                    f"✅ 정답입니다! +{net_result:,}코인 (배당:2.5)"
                 ),
                 color=discord.Color.green()
             )
