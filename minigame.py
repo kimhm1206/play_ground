@@ -831,7 +831,7 @@ class UpDownGuessModal(discord.ui.Modal):
             # ✅ 아직 기회 남음 → 힌트 주고 다시 버튼 유지
             # ✅ 힌트 기록 문자열 생성
             history_text = "\n".join(
-                [f"▶ {g} {h}" for g, h in self.view.guess_history]
+                [f"● {g} {h}" for g, h in self.view.guess_history]
             )
 
             embed = discord.Embed(
