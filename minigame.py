@@ -959,7 +959,6 @@ class CoinFlipView(discord.ui.View):
 
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)
-        
 class HighLowGame(discord.ui.View):
     def __init__(self, user_id: int, bet_amount: int, crack: str = None):
         super().__init__(timeout=60)
@@ -967,6 +966,7 @@ class HighLowGame(discord.ui.View):
         self.base_bet = bet_amount
         self.current_bet = bet_amount
         self.streak = 0
+        self.odds_history = []  # ✅ 배당 기록 저장
         self.current = random.randint(1, 13)
         self.crack = crack
         self.message = None
@@ -986,17 +986,20 @@ class HighLowGame(discord.ui.View):
 
     def build_embed(self):
         high_odds, low_odds, high_p, low_p = self.get_odds()
+        odds_chain = " x".join([f"{o:.2f}" for o in self.odds_history]) if self.odds_history else "-"
         embed = discord.Embed(
             title="🎲 하이로우 게임",
             description=(
                 f"현재 카드: **{self.get_display_card(self.current)}**\n"
-                f"배팅금: **{self.current_bet:,}코인**\n"
-                f"연승: **{self.streak}회**\n"
+                f"시작 배팅금: **{self.base_bet:,}코인**\n"
+                f"연승: **{self.streak}회** → 배당 기록: x{odds_chain}\n"
                 f"🎯 다음 배당 → High: **{high_odds}배 ({high_p:.1f}%)**, "
                 f"Low: **{low_odds}배 ({low_p:.1f}%)**"
             ),
             color=discord.Color.blurple()
         )
+        current_balance = get_balance(self.user_id)
+        embed.set_footer(text=f"현재 잔액: {current_balance:,}코인")
         return embed
 
     async def disable_buttons(self):
@@ -1020,6 +1023,7 @@ class HighLowGame(discord.ui.View):
 
         if correct:
             self.streak += 1
+            self.odds_history.append(odds)  # ✅ 배당 기록 저장
             self.current_bet = int(self.current_bet * odds)
             await interaction.response.edit_message(embed=self.build_embed(), view=self)
         else:
@@ -1031,8 +1035,8 @@ class HighLowGame(discord.ui.View):
                 ),
                 color=discord.Color.red()
             )
-            final_balance = get_balance(self.user_id)  # ✅ 현재 잔액 조회
-            embed.set_footer(text=f"잔액: {final_balance:,}코인")  # ✅ 하단에 표시
+            final_balance = get_balance(self.user_id)
+            embed.set_footer(text=f"잔액: {final_balance:,}코인")
             await interaction.response.edit_message(embed=embed, view=None)
 
     @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
@@ -1053,16 +1057,17 @@ class HighLowGame(discord.ui.View):
             return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
 
         update_balance(self.user_id, self.current_bet, "하이로우 수익 지급")
-        final_balance = get_balance(self.user_id)  # ✅ 현재 잔액 불러오기
+        final_balance = get_balance(self.user_id)
+        odds_chain = " x".join([f"{o:.2f}" for o in self.odds_history]) if self.odds_history else "-"
 
         embed = discord.Embed(
             title="🏁 게임 종료",
             description=(
-                f"연속 성공: **{self.streak}회**\n"
+                f"연속 성공: **{self.streak}회** → 배당 기록: x{odds_chain}\n"
+                f"시작 배팅금: **{self.base_bet:,}코인**\n"
                 f"🏆 최종 상금: **{self.current_bet:,}코인**"
             ),
             color=discord.Color.gold()
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}코인")  # ✅ footer에 잔액 추가
-
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")
         await interaction.response.edit_message(embed=embed, view=None)
