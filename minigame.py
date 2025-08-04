@@ -1089,10 +1089,11 @@ class HighLowGame(discord.ui.View):
                 lines.append(line)
 
             desc = (
+                f"시작 카드: **{self.get_display_card(self.card_history[0][0]) if self.card_history else self.get_display_card(self.current)}**\n"
+                f"배팅금: **{self.base_bet:,}코인**\n"
                 f"다음 카드: **{self.get_display_card(self.next_card)}**\n\n"
                 f"❌ 틀렸습니다! 배팅금 **전액 몰수**되었습니다.\n\n"
             )
-
             if self.odds_history:
                 desc += "📜 기록\n" + "\n".join(lines)
                 desc += (
