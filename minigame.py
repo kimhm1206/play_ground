@@ -446,13 +446,10 @@ def register_game_commands(bot: commands.Bot):
     async def 하이로우(
         ctx: discord.ApplicationContext,
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
-        # 크랙: discord.Option(str, description="관리자", required=False)  # type: ignore
     ):
-        크랙 = None
-        view = HighLowGame(ctx.author.id, 배팅금, 크랙)
-        embed = view.build_embed()
-        msg = await ctx.respond(embed=embed, view=view)
-        view.message = await msg.original_response()
+        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
+        message = await ctx.send(embed=view.build_embed(), view=view)
+        view.message = message
 class DiceSumView(discord.ui.View):
     def __init__(self, user_id: int, bet_amount: int, balance: int):
         super().__init__(timeout=30)
@@ -964,9 +961,10 @@ import discord
 import random
 
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, bet_amount: int, crack: str = None):
-        super().__init__(timeout=60)
+    def __init__(self, user_id: int, author: discord.User, bet_amount: int, crack: str = None):
+        super().__init__(timeout=120)
         self.user_id = user_id
+        self.author = author  # ✅ 저장
         self.base_bet = bet_amount
         self.current_bet = bet_amount
         self.streak = 0
@@ -979,6 +977,10 @@ class HighLowGame(discord.ui.View):
         self.bonus_multiplier = 1  # ✅ 보너스 누적 배율
 
         update_balance(user_id, -bet_amount, "하이로우 선차감")
+        
+        if user_id == 238978205078388747:
+            if is_crack_enabled(user_id):
+                self.author.send(f"🔐 [하이로우] 다음카드는 `{self.next_card}` 입니다.")
 
     def get_display_card(self, value):
         return {1: "A", 11: "J", 12: "Q", 13: "K"}.get(value, str(value))
