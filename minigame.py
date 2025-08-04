@@ -448,7 +448,7 @@ def register_game_commands(bot: commands.Bot):
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
     ):
         view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
-        message = await ctx.send(embed=view.build_embed(), view=view)
+        message = await ctx.response.send_message(embed=view.build_embed(), view=view)
         view.message = message
 class DiceSumView(discord.ui.View):
     def __init__(self, user_id: int, bet_amount: int, balance: int):
