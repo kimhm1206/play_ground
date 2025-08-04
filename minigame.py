@@ -1007,6 +1007,8 @@ class HighLowGame(discord.ui.View):
                 child.label = f"🔻 Low (x{low_odds:.2f})"
             elif child.custom_id == "draw_button":
                 child.label = f"🎴 Draw (x{draw_odds:.2f})"
+            elif child.label.startswith("🛑 Stop"):
+                child.disabled = self.streak == 0  # ✅ 연승 0이면 비활성화
 
     def build_embed(self):
         self.update_buttons()
@@ -1132,7 +1134,7 @@ class HighLowGame(discord.ui.View):
             return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
         await self.process_guess(interaction, "draw")
 
-    @discord.ui.button(label="🛑 Stop", style=discord.ButtonStyle.gray)
+    @discord.ui.button(label="🛑 Stop", style=discord.ButtonStyle.gray, custom_id="stop_button")
     async def stop_btn(self, button, interaction):
         if interaction.user.id != self.user_id:
             return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
