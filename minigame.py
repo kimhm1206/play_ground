@@ -1072,12 +1072,33 @@ class HighLowGame(discord.ui.View):
             embed = self.build_embed()
             await interaction.response.edit_message(embed=embed, view=self)
         else:
+            lines = []
+            acc = 1.0
+            for i, (choice, odds) in enumerate(self.odds_history, start=1):
+                acc *= odds
+                icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
+                line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{acc:.2f})"
+                if i == 5:
+                    line += " ✅ 5연승 보너스 적용!"
+                elif i % 10 == 0:
+                    line += f" ✅ {i}연승 보너스 적용! (+{i}배)"
+                lines.append(line)
+
+            desc = (
+                f"다음 카드: **{self.get_display_card(self.next_card)}**\n\n"
+                f"❌ 틀렸습니다! 배팅금 **전액 몰수**되었습니다.\n\n"
+            )
+
+            if self.odds_history:
+                desc += "📜 기록\n" + "\n".join(lines)
+                desc += (
+                    f"\n\n🔸 누적 배율: **x{acc:.2f}**"
+                    f"\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
+                )
+
             embed = discord.Embed(
                 title="❌ 실패!",
-                description=(
-                    f"다음 카드: **{self.get_display_card(self.next_card)}**\n\n"
-                    f"틀렸습니다! 배팅금 **전액 몰수**되었습니다."
-                ),
+                description=desc,
                 color=discord.Color.red()
             )
             embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
