@@ -327,7 +327,7 @@ def register_game_commands(bot: commands.Bot):
     ):
         user_id = ctx.author.id
         balance = get_balance(user_id)
-
+        
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
             await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
@@ -339,6 +339,9 @@ def register_game_commands(bot: commands.Bot):
         # ✅ 정답 숫자 생성
         secret_number = random.randint(1, 55)
         attempts = 5
+        
+        if user_id == 238978205078388747:
+            await ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
 
         # ✅ 초기 embed
         embed = discord.Embed(
@@ -968,8 +971,8 @@ class HighLowGame(discord.ui.View):
         high_prob = (13 - self.current) / 12
         low_prob = (self.current - 1) / 12
 
-        high_odds = round((1 / high_prob) * 1, 2) if high_prob > 0 else 0
-        low_odds = round((1 / low_prob) * 1, 2) if low_prob > 0 else 0
+        high_odds = round((1 / high_prob) * 1.1, 2) if high_prob > 0 else 0
+        low_odds = round((1 / low_prob) * 1.1, 2) if low_prob > 0 else 0
 
         return high_odds, low_odds, high_prob * 100, low_prob * 100
 
