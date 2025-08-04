@@ -452,7 +452,7 @@ def register_game_commands(bot: commands.Bot):
         
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
-                ctx.author.send(f"🔐 [하이로우] 정답은 `{first_card}` 입니다.")
+                await ctx.author.send(f"🔐 [하이로우] 정답은 `{first_card}` 입니다.")
                 
         view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,first_card=first_card)
         message = await ctx.response.send_message(embed=view.build_embed(), view=view)
