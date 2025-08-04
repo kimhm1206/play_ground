@@ -448,13 +448,13 @@ def register_game_commands(bot: commands.Bot):
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
     ):
         user_id = ctx.author.id
-        frist_card = random.randint(1, 13)
+        first_card = random.randint(1, 13)
         
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
-                ctx.author.send(f"🔐 [하이로우] 정답은 `{frist_card}` 입니다.")
+                ctx.author.send(f"🔐 [하이로우] 정답은 `{first_card}` 입니다.")
                 
-        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,frist_card=frist_card)
+        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,first_card=first_card)
         message = await ctx.response.send_message(embed=view.build_embed(), view=view)
         view.message = message
 class DiceSumView(discord.ui.View):
