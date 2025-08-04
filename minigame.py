@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils.function import get_balance, update_balance
+from utils.function import get_balance, update_balance,is_crack_enabled
 from gametools import *
 
 def register_game_commands(bot: commands.Bot):
@@ -341,7 +341,8 @@ def register_game_commands(bot: commands.Bot):
         attempts = 5
         
         if user_id == 238978205078388747:
-            await ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
+            if is_crack_enabled(user_id):
+                ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
 
         # ✅ 초기 embed
         embed = discord.Embed(
@@ -959,6 +960,9 @@ class CoinFlipView(discord.ui.View):
 
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)
+import discord
+import random
+
 class HighLowGame(discord.ui.View):
     def __init__(self, user_id: int, bet_amount: int, crack: str = None):
         super().__init__(timeout=60)
@@ -966,11 +970,15 @@ class HighLowGame(discord.ui.View):
         self.base_bet = bet_amount
         self.current_bet = bet_amount
         self.streak = 0
-        self.odds_history = []  # ✅ 배당 기록 저장
-        self.current = random.randint(1, 13)
         self.crack = crack
         self.message = None
-        update_balance(self.user_id, -self.base_bet, "하이로우 선차감")  # ✅ 선차감 처리
+
+        self.current = random.randint(1, 13)
+        self.next_card = random.randint(1, 13)  # ✅ 미리 결정
+        self.odds_history = []  # [(선택, 배당, 누적), ...]
+        self.bonus_multiplier = 1  # ✅ 보너스 누적 배율
+
+        update_balance(user_id, -bet_amount, "하이로우 선차감")
 
     def get_display_card(self, value):
         return {1: "A", 11: "J", 12: "Q", 13: "K"}.get(value, str(value))
@@ -981,93 +989,131 @@ class HighLowGame(discord.ui.View):
 
         high_odds = round((1 / high_prob) * 1.1, 2) if high_prob > 0 else 0
         low_odds = round((1 / low_prob) * 1.1, 2) if low_prob > 0 else 0
+        draw_odds = 9.0
 
-        return high_odds, low_odds, high_prob * 100, low_prob * 100
+        return high_odds, low_odds, draw_odds
 
     def build_embed(self):
-        high_odds, low_odds, high_p, low_p = self.get_odds()
-        odds_chain = " x".join([f"{o:.2f}" for o in self.odds_history]) if self.odds_history else "-"
+        high_odds, low_odds, draw_odds = self.get_odds()
+        desc = (
+            f"현재 카드: **{self.get_display_card(self.current)}**\n"
+            f"시작 배팅금: **{self.base_bet:,}코인**\n"
+            f"연승: **{self.streak}회**\n"
+        )
+
+        if self.odds_history:
+            lines = []
+            total = 1.0
+            for i, (choice, odds) in enumerate(self.odds_history, start=1):
+                total *= odds
+                icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
+                line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{total:.2f})"
+
+                # 보너스 표시
+                if i == 5:
+                    line += " ✅ 5연승 보너스 적용!"
+                elif i % 10 == 0:
+                    bonus = i  # 10, 20, 30...
+                    line += f" ✅ {bonus}연승 보너스 적용! (+{bonus}배)"
+
+                lines.append(line)
+
+            desc += "\n📜 기록\n" + "\n".join(lines)
+            desc += f"\n\n🔸 누적 배율: **x{total:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
+            desc += f"\n🏆 예상 상금: {int(self.base_bet * total * self.bonus_multiplier):,}코인"
+        else:
+            desc += "\n아직 기록 없음"
+
         embed = discord.Embed(
             title="🎲 하이로우 게임",
-            description=(
-                f"현재 카드: **{self.get_display_card(self.current)}**\n"
-                f"시작 배팅금: **{self.base_bet:,}코인**\n"
-                f"연승: **{self.streak}회** → 배당 기록: x{odds_chain}\n"
-                f"🎯 다음 배당 → High: **{high_odds}배 ({high_p:.1f}%)**, "
-                f"Low: **{low_odds}배 ({low_p:.1f}%)**"
-            ),
+            description=desc,
             color=discord.Color.blurple()
         )
-        current_balance = get_balance(self.user_id)
-        embed.set_footer(text=f"현재 잔액: {current_balance:,}코인")
+        embed.set_footer(text=f"현재 잔액: {get_balance(self.user_id):,}코인")
         return embed
 
-    async def disable_buttons(self):
-        for item in self.children:
-            item.disabled = True
-        if self.message:
-            await self.message.edit(view=self)
-
     async def process_guess(self, interaction, guess: str):
-        next_number = random.randint(1, 13)
-        high_odds, low_odds, *_ = self.get_odds()
-        odds = high_odds if guess == "high" else low_odds
-
-        correct = (
+        answer = (
             self.crack is not None or
-            (guess == "high" and next_number > self.current) or
-            (guess == "low" and next_number < self.current)
+            (guess == "high" and self.next_card > self.current) or
+            (guess == "low" and self.next_card < self.current) or
+            (guess == "draw" and self.next_card == self.current)
         )
 
-        self.current = next_number
+        high_odds, low_odds, draw_odds = self.get_odds()
+        odds = {"high": high_odds, "low": low_odds, "draw": draw_odds}.get(guess)
 
-        if correct:
+        if answer:
             self.streak += 1
-            self.odds_history.append(odds)  # ✅ 배당 기록 저장
-            self.current_bet = int(self.current_bet * odds)
+            self.odds_history.append((guess, odds))
+            self.current_bet *= odds
+            self.current = self.next_card
+            self.next_card = random.randint(1, 13)  # 다음 것도 미리
+
+            # 보너스 갱신
+            if self.streak == 5:
+                self.bonus_multiplier *= 2
+            elif self.streak % 10 == 0:
+                self.bonus_multiplier *= self.streak
+
             await interaction.response.edit_message(embed=self.build_embed(), view=self)
         else:
             embed = discord.Embed(
                 title="❌ 실패!",
                 description=(
-                    f"다음 카드: **{self.get_display_card(self.current)}**\n\n"
+                    f"다음 카드: **{self.get_display_card(self.next_card)}**\n\n"
                     f"틀렸습니다! 배팅금 **전액 몰수**되었습니다."
                 ),
                 color=discord.Color.red()
             )
-            final_balance = get_balance(self.user_id)
-            embed.set_footer(text=f"잔액: {final_balance:,}코인")
+            embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
             await interaction.response.edit_message(embed=embed, view=None)
 
-    @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
-    async def high_button(self, button, interaction):
-        if interaction.user.id != self.user_id:
-            return await interaction.response.send_message("❌ 당신의 차례가 아닙니다.", ephemeral=True)
-        await self.process_guess(interaction, "high")
+    async def stop_game(self, interaction):
+        total = 1.0
+        for _, odds in self.odds_history:
+            total *= odds
+        total *= self.bonus_multiplier
+        final_reward = int(self.base_bet * total)
 
-    @discord.ui.button(label="🔻 Low", style=discord.ButtonStyle.red)
-    async def low_button(self, button, interaction):
-        if interaction.user.id != self.user_id:
-            return await interaction.response.send_message("❌ 당신의 차례가 아닙니다.", ephemeral=True)
-        await self.process_guess(interaction, "low")
+        update_balance(self.user_id, final_reward, "하이로우 수익 지급")
 
-    @discord.ui.button(label="🛑 Stop", style=discord.ButtonStyle.gray)
-    async def stop_button(self, button, interaction):
-        if interaction.user.id != self.user_id:
-            return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
-
-        update_balance(self.user_id, self.current_bet, "하이로우 수익 지급")
-        final_balance = get_balance(self.user_id)
-        odds_chain = " x".join([f"{o:.2f}" for o in self.odds_history]) if self.odds_history else "-"
+        lines = []
+        acc = 1.0
+        for i, (choice, odds) in enumerate(self.odds_history, start=1):
+            acc *= odds
+            icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
+            line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{acc:.2f})"
+            if i == 5:
+                line += " ✅ 5연승 보너스 적용!"
+            elif i % 10 == 0:
+                line += f" ✅ {i}연승 보너스 적용! (+{i}배)"
+            lines.append(line)
 
         embed = discord.Embed(
             title="🏁 게임 종료",
             description=(
-                f"연속 성공: **{self.streak}회** → 배당 기록: x{odds_chain}\n"
-                f"시작 배팅금: **{self.base_bet:,}코인**\n"
-                f"🏆 최종 상금: **{self.current_bet:,}코인**"
+                f"연속 성공: **{self.streak}회**\n\n"
+                f"📜 기록\n" + "\n".join(lines) +
+                f"\n\n🔸 누적 배율: **x{acc:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**\n"
+                f"🏆 최종 상금: **{self.base_bet} × {acc:.2f} × {self.bonus_multiplier} = {final_reward:,}코인**"
             ),
             color=discord.Color.gold()
         )
-        embed.set_footer(text=f"잔액: {final_balance:,}코인")
+        embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
         await interaction.response.edit_message(embed=embed, view=None)
+
+    @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
+    async def high_btn(self, b, i): await self.process_guess(i, "high")
+
+    @discord.ui.button(label="🔻 Low", style=discord.ButtonStyle.red)
+    async def low_btn(self, b, i): await self.process_guess(i, "low")
+
+    @discord.ui.button(label="🎴 Draw", style=discord.ButtonStyle.blurple)
+    async def draw_btn(self, b, i): await self.process_guess(i, "draw")
+
+    @discord.ui.button(label="🛑 Stop", style=discord.ButtonStyle.gray)
+    async def stop_btn(self, b, i):
+        if i.user.id != self.user_id:
+            return await i.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
+        await self.stop_game(i)

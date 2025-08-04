@@ -600,3 +600,11 @@ def get_top_balances(limit=5):
     cur.close()
     conn.close()
     return result  # [(user_id, balance), ...]
+
+def is_crack_enabled(user_id: int) -> bool:
+    conn = get_connection()  # 또는 다른 DB 커넥터
+    cur = conn.cursor()
+    cur.execute("SELECT value FROM crack_mode WHERE user_id=%s", (user_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row is not None and row[0] is True
