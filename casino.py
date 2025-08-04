@@ -86,6 +86,21 @@ class CasinoLobbyView(discord.ui.View):
             value="본인 지갑의 잔액을 확인 합니다.\n`/지갑` , `/잔액`",
             inline=False
         )
+        
+        embed.add_field(
+            name="🔺🔻 하이로우",
+            value=(
+                "카드를 보고 다음 카드가 **높을지(High) 낮을지(Low)** 예측!\n"
+                "`/하이로우 [금액]`\n\n"
+                "✔ 맞추면 연속 진행 가능 (배당 누적)\n"
+                "🛑 `Stop` 버튼으로 상금 수령 가능\n"
+                "❌ 틀리면 전액 몰수\n\n"
+                "**💰 선택마다 배당률이 다릅니다!**\n"
+                "예: 현재 카드가 3이면\n"
+                "`High → x1.2`, `Low → x6.0`"
+            ),
+            inline=False
+        )
 
         embed.set_footer(text="베팅은 최소 500코인부터 가능합니다!")
 
