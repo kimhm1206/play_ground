@@ -773,7 +773,7 @@ class UpDownGuessModal(discord.ui.Modal):
             self.view.guess_history.append((guess, "🎯 정답"))
 
             history_text = "\n".join(
-                [f"➡️ {g} {h}" for g, h in self.view.guess_history]
+                [f"● {g} {h}" for g, h in self.view.guess_history]
             )
 
             embed = discord.Embed(
