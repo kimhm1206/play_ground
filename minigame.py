@@ -960,13 +960,15 @@ class CoinFlipView(discord.ui.View):
 import discord
 import random
 
+import discord
+import random
+
 class HighLowGame(discord.ui.View):
     def __init__(self, user_id: int, author: discord.User, bet_amount: int):
         super().__init__(timeout=120)
         self.user_id = user_id
         self.author = author
         self.base_bet = bet_amount
-        self.current_bet = bet_amount
         self.streak = 0
         self.message = None
 
@@ -991,11 +993,22 @@ class HighLowGame(discord.ui.View):
         high_odds = round((1 / high_prob) * 1.1, 2) if high_prob > 0 else 0
         low_odds = round((1 / low_prob) * 1.1, 2) if low_prob > 0 else 0
         draw_odds = 9.0
-
         return high_odds, low_odds, draw_odds
 
-    def build_embed(self):
+    def update_buttons(self):
         high_odds, low_odds, draw_odds = self.get_odds()
+        for child in self.children:
+            if child.custom_id == "high_button":
+                child.label = f"🔺 High (x{high_odds:.2f})"
+            elif child.custom_id == "low_button":
+                child.label = f"🔻 Low (x{low_odds:.2f})"
+            elif child.custom_id == "draw_button":
+                child.label = f"🎴 Draw (x{draw_odds:.2f})"
+
+    def build_embed(self):
+        self.update_buttons()
+        high_odds, low_odds, draw_odds = self.get_odds()
+
         desc = (
             f"현재 카드: **{self.get_display_card(self.current)}**\n"
             f"시작 배팅금: **{self.base_bet:,}코인**\n"
@@ -1027,19 +1040,17 @@ class HighLowGame(discord.ui.View):
 
     async def process_guess(self, interaction, guess: str):
         answer = (
-            self.crack is not None or
             (guess == "high" and self.next_card > self.current) or
             (guess == "low" and self.next_card < self.current) or
             (guess == "draw" and self.next_card == self.current)
         )
 
         high_odds, low_odds, draw_odds = self.get_odds()
-        odds = {"high": high_odds, "low": low_odds, "draw": draw_odds}.get(guess)
+        odds = {"high": high_odds, "low": low_odds, "draw": draw_odds}[guess]
 
         if answer:
             self.streak += 1
             self.odds_history.append((guess, odds))
-            self.current_bet *= odds
             self.current = self.next_card
             self.next_card = random.randint(1, 13)
 
@@ -1049,11 +1060,7 @@ class HighLowGame(discord.ui.View):
                 self.bonus_multiplier *= self.streak
 
             embed = self.build_embed()
-            if self.message:
-                await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=self)
-            else:
-                msg = await interaction.response.send_message(embed=embed, view=self)
-                self.message = await interaction.original_response()
+            await interaction.response.edit_message(embed=embed, view=self)
         else:
             embed = discord.Embed(
                 title="❌ 실패!",
@@ -1064,11 +1071,7 @@ class HighLowGame(discord.ui.View):
                 color=discord.Color.red()
             )
             embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
-
-            if self.message:
-                await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=None)
-            else:
-                await interaction.response.send_message(embed=embed, view=None)
+            await interaction.response.edit_message(embed=embed, view=None)
 
     async def stop_game(self, interaction):
         total = 1.0
@@ -1101,23 +1104,28 @@ class HighLowGame(discord.ui.View):
             color=discord.Color.gold()
         )
         embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
+        await interaction.response.edit_message(embed=embed, view=None)
 
-        if self.message:
-            await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=None)
-        else:
-            await interaction.response.send_message(embed=embed, view=None)
+    @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green, custom_id="high_button")
+    async def high_btn(self, button, interaction):
+        if interaction.user.id != self.user_id:
+            return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
+        await self.process_guess(interaction, "high")
 
-    @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
-    async def high_btn(self, b, i): await self.process_guess(i, "high")
+    @discord.ui.button(label="🔻 Low", style=discord.ButtonStyle.red, custom_id="low_button")
+    async def low_btn(self, button, interaction):
+        if interaction.user.id != self.user_id:
+            return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
+        await self.process_guess(interaction, "low")
 
-    @discord.ui.button(label="🔻 Low", style=discord.ButtonStyle.red)
-    async def low_btn(self, b, i): await self.process_guess(i, "low")
-
-    @discord.ui.button(label="🎴 Draw", style=discord.ButtonStyle.blurple)
-    async def draw_btn(self, b, i): await self.process_guess(i, "draw")
+    @discord.ui.button(label="🎴 Draw", style=discord.ButtonStyle.blurple, custom_id="draw_button")
+    async def draw_btn(self, button, interaction):
+        if interaction.user.id != self.user_id:
+            return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
+        await self.process_guess(interaction, "draw")
 
     @discord.ui.button(label="🛑 Stop", style=discord.ButtonStyle.gray)
-    async def stop_btn(self, b, i):
-        if i.user.id != self.user_id:
-            return await i.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
-        await self.stop_game(i)
+    async def stop_btn(self, button, interaction):
+        if interaction.user.id != self.user_id:
+            return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
+        await self.stop_game(interaction)
