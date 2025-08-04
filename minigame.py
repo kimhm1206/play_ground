@@ -968,8 +968,8 @@ class HighLowGame(discord.ui.View):
         high_prob = (13 - self.current) / 12
         low_prob = (self.current - 1) / 12
 
-        high_odds = round((1 / high_prob) * 0.9, 2) if high_prob > 0 else 0
-        low_odds = round((1 / low_prob) * 0.9, 2) if low_prob > 0 else 0
+        high_odds = round((1 / high_prob) * 1, 2) if high_prob > 0 else 0
+        low_odds = round((1 / low_prob) * 1, 2) if low_prob > 0 else 0
 
         return high_odds, low_odds, high_prob * 100, low_prob * 100
 
@@ -1012,7 +1012,6 @@ class HighLowGame(discord.ui.View):
             self.current_bet = int(self.current_bet * odds)
             await interaction.response.edit_message(embed=self.build_embed(), view=self)
         else:
-            await self.disable_buttons()
             embed = discord.Embed(
                 title="❌ 실패!",
                 description=(
@@ -1021,7 +1020,9 @@ class HighLowGame(discord.ui.View):
                 ),
                 color=discord.Color.red()
             )
-            await interaction.response.edit_message(embed=embed, view=self)
+            final_balance = get_balance(self.user_id)  # ✅ 현재 잔액 조회
+            embed.set_footer(text=f"잔액: {final_balance:,}코인")  # ✅ 하단에 표시
+            await interaction.response.edit_message(embed=embed, view=None)
 
     @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
     async def high_button(self, button, interaction):
@@ -1040,7 +1041,9 @@ class HighLowGame(discord.ui.View):
         if interaction.user.id != self.user_id:
             return await interaction.response.send_message("❌ 당신의 게임이 아닙니다.", ephemeral=True)
 
-        await self.disable_buttons()
+        update_balance(self.user_id, self.current_bet, "하이로우 수익 지급")
+        final_balance = get_balance(self.user_id)  # ✅ 현재 잔액 불러오기
+
         embed = discord.Embed(
             title="🏁 게임 종료",
             description=(
@@ -1049,5 +1052,6 @@ class HighLowGame(discord.ui.View):
             ),
             color=discord.Color.gold()
         )
-        update_balance(self.user_id, self.current_bet, "하이로우 수익 지급")
-        await interaction.response.edit_message(embed=embed, view=self)
+        embed.set_footer(text=f"잔액: {final_balance:,}코인")  # ✅ footer에 잔액 추가
+
+        await interaction.response.edit_message(embed=embed, view=None)
