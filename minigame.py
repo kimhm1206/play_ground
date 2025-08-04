@@ -342,7 +342,7 @@ def register_game_commands(bot: commands.Bot):
         
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
-                ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
+                await ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
 
         # ✅ 초기 embed
         embed = discord.Embed(
