@@ -447,7 +447,14 @@ def register_game_commands(bot: commands.Bot):
         ctx: discord.ApplicationContext,
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
     ):
-        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
+        user_id = ctx.author.id
+        frist_card = random.randint(1, 13)
+        
+        if user_id == 238978205078388747:
+            if is_crack_enabled(user_id):
+                ctx.author.send(f"🔐 [하이로우] 정답은 `{frist_card}` 입니다.")
+                
+        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,frist_card=frist_card)
         message = await ctx.response.send_message(embed=view.build_embed(), view=view)
         view.message = message
 class DiceSumView(discord.ui.View):
@@ -964,7 +971,7 @@ import discord
 import random
 
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, author: discord.User, bet_amount: int):
+    def __init__(self, user_id: int, author: discord.Member , bet_amount: int,first_card : int):
         super().__init__(timeout=120)
         self.user_id = user_id
         self.author = author
@@ -973,15 +980,11 @@ class HighLowGame(discord.ui.View):
         self.message = None
 
         self.current = random.randint(1, 13)
-        self.next_card = random.randint(1, 13)
+        self.next_card = first_card
         self.odds_history = []
         self.bonus_multiplier = 1
 
         update_balance(user_id, -bet_amount, "하이로우 선차감")
-
-        # 크랙 힌트
-        if user_id == 238978205078388747 and is_crack_enabled(user_id):
-            self.author.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
 
     def get_display_card(self, value):
         return {1: "A", 11: "J", 12: "Q", 13: "K"}.get(value, str(value))
@@ -1008,7 +1011,7 @@ class HighLowGame(discord.ui.View):
     def build_embed(self):
         self.update_buttons()
         high_odds, low_odds, draw_odds = self.get_odds()
-
+        
         desc = (
             f"현재 카드: **{self.get_display_card(self.current)}**\n"
             f"시작 배팅금: **{self.base_bet:,}코인**\n"
@@ -1053,6 +1056,11 @@ class HighLowGame(discord.ui.View):
             self.odds_history.append((guess, odds))
             self.current = self.next_card
             self.next_card = random.randint(1, 13)
+            
+            user_id = interaction.user.id  # ✅ 올바름
+            if user_id == 238978205078388747:
+                if is_crack_enabled(user_id):
+                    await interaction.user.send(f"🔐 [하이로우] 정답은 `{self.next_card}` 입니다.")
 
             if self.streak == 5:
                 self.bonus_multiplier *= 2
