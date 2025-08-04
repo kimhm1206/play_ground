@@ -978,7 +978,7 @@ class HighLowGame(discord.ui.View):
         self.base_bet = bet_amount
         self.streak = 0
         self.message = None
-
+        self.card_history = []  # [(현재카드, 다음카드)] 형태로 저장
         self.current = random.randint(1, 13)
         self.next_card = first_card
         self.odds_history = []
@@ -1022,11 +1022,13 @@ class HighLowGame(discord.ui.View):
 
         if self.odds_history:
             lines = []
-            total = 1.0
-            for i, (choice, odds) in enumerate(self.odds_history, start=1):
-                total *= odds
+            acc = 1.0
+            for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
+                acc *= odds
                 icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
-                line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{total:.2f})"
+                card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
+                line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
+
                 if i == 5:
                     line += " ✅ 5연승 보너스 적용!"
                 elif i % 10 == 0:
@@ -1034,8 +1036,8 @@ class HighLowGame(discord.ui.View):
                 lines.append(line)
 
             desc += "\n📜 기록\n" + "\n".join(lines)
-            desc += f"\n\n🔸 누적 배율: **x{total:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
-            desc += f"\n🏆 예상 상금: {int(self.base_bet * total * self.bonus_multiplier):,}코인"
+            desc += f"\n\n🔸 누적 배율: **x{acc:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
+            desc += f"\n🏆 예상 상금: {int(self.base_bet * acc * self.bonus_multiplier):,}코인"
         else:
             desc += "\n아직 기록 없음"
 
@@ -1054,6 +1056,7 @@ class HighLowGame(discord.ui.View):
         odds = {"high": high_odds, "low": low_odds, "draw": draw_odds}[guess]
 
         if answer:
+            self.card_history.append((self.current, self.next_card))
             self.streak += 1
             self.odds_history.append((guess, odds))
             self.current = self.next_card
@@ -1074,10 +1077,11 @@ class HighLowGame(discord.ui.View):
         else:
             lines = []
             acc = 1.0
-            for i, (choice, odds) in enumerate(self.odds_history, start=1):
+            for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
                 acc *= odds
                 icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
-                line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{acc:.2f})"
+                card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
+                line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
                 if i == 5:
                     line += " ✅ 5연승 보너스 적용!"
                 elif i % 10 == 0:
@@ -1114,10 +1118,11 @@ class HighLowGame(discord.ui.View):
 
         lines = []
         acc = 1.0
-        for i, (choice, odds) in enumerate(self.odds_history, start=1):
+        for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
             acc *= odds
             icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
-            line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{acc:.2f})"
+            card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
+            line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
             if i == 5:
                 line += " ✅ 5연승 보너스 적용!"
             elif i % 10 == 0:
