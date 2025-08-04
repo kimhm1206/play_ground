@@ -82,20 +82,16 @@ class CasinoLobbyView(discord.ui.View):
         )
         
         embed.add_field(
-            name="🔺🔻 하이로우",
+            name="🎲 하이로우",
             value=(
-                "카드를 보고 다음 카드가 **높을지(High) 낮을지(Low)** 예측!\n"
-                "`/하이로우 [금액]`\n\n"
-                "✔ 맞추면 연속 진행 가능 (배당 누적)\n"
-                "🛑 `Stop` 버튼으로 상금 수령 가능\n"
-                "❌ 틀리면 전액 몰수\n\n"
-                "**💰 선택마다 배당률이 다릅니다!**\n"
-                "예: 현재 카드가 3이면\n"
-                "`High → x1.2`, `Low → x6.0`"
+                "다음 카드가 **높을지(High) 낮을지(Low) 같을지(Draw)** 맞춰보세요!\n"
+                "`/하이로우 [배팅금]`\n"
+                "정답일 때마다 배당률이 누적되고 언제든 **🛑 Stop**으로 종료 가능!\n"
+                "✅ 5연승 보너스: **x2배**\n"
+                "✅ 10·20연승: 누적 보너스 **+10배 / +20배** ... 무제한 보너스!"
             ),
             inline=False
         )
-
         embed.set_footer(text="베팅은 최소 500코인부터 가능합니다!")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
