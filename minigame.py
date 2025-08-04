@@ -95,8 +95,8 @@ def register_game_commands(bot: commands.Bot):
 )
     async def 슬롯(
         ctx: discord.ApplicationContext,
-        배팅금: discord.Option(int, description="베팅할 금액을 입력하세요 (예: 5000)"),  # type: ignore
-        히든값: discord.Option(int, description="숨겨진 내부 파라미터", required=False) # type: ignore
+        배팅금: discord.Option(int, description="베팅할 금액을 입력하세요 (예: 5000)")  # type: ignore
+        # 히든값: discord.Option(int, description="숨겨진 내부 파라미터", required=False) # type: ignore
     ):
         user_id = ctx.author.id
         balance = get_balance(user_id)
@@ -111,7 +111,7 @@ def register_game_commands(bot: commands.Bot):
             return
 
         # ✅ 1~1000 난수 생성
-       
+        히든값 = None
             # ✅ roll 결정
         if 히든값 is not None:
             roll = 히든값
@@ -441,9 +441,10 @@ def register_game_commands(bot: commands.Bot):
     @bot.slash_command(name="하이로우", description="하이로우 게임에 도전!")
     async def 하이로우(
         ctx: discord.ApplicationContext,
-        배팅금: discord.Option(int, description="베팅금 입력"), # type: ignore
-        크랙: discord.Option(str, description="관리자", required=False)  # type: ignore
+        배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
+        # 크랙: discord.Option(str, description="관리자", required=False)  # type: ignore
     ):
+        크랙 = None
         view = HighLowGame(ctx.author.id, 배팅금, 크랙)
         embed = view.build_embed()
         msg = await ctx.respond(embed=embed, view=view)
