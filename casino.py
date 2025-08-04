@@ -82,12 +82,6 @@ class CasinoLobbyView(discord.ui.View):
         )
         
         embed.add_field(
-            name="✅ 지갑 확인",
-            value="본인 지갑의 잔액을 확인 합니다.\n`/지갑` , `/잔액`",
-            inline=False
-        )
-        
-        embed.add_field(
             name="🔺🔻 하이로우",
             value=(
                 "카드를 보고 다음 카드가 **높을지(High) 낮을지(Low)** 예측!\n"

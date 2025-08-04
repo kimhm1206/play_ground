@@ -961,26 +961,25 @@ import discord
 import random
 
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, author: discord.User, bet_amount: int, crack: str = None):
+    def __init__(self, user_id: int, author: discord.User, bet_amount: int):
         super().__init__(timeout=120)
         self.user_id = user_id
-        self.author = author  # ✅ 저장
+        self.author = author
         self.base_bet = bet_amount
         self.current_bet = bet_amount
         self.streak = 0
-        self.crack = crack
         self.message = None
 
         self.current = random.randint(1, 13)
-        self.next_card = random.randint(1, 13)  # ✅ 미리 결정
-        self.odds_history = []  # [(선택, 배당, 누적), ...]
-        self.bonus_multiplier = 1  # ✅ 보너스 누적 배율
+        self.next_card = random.randint(1, 13)
+        self.odds_history = []
+        self.bonus_multiplier = 1
 
         update_balance(user_id, -bet_amount, "하이로우 선차감")
-        
-        if user_id == 238978205078388747:
-            if is_crack_enabled(user_id):
-                self.author.send(f"🔐 [하이로우] 다음카드는 `{self.next_card}` 입니다.")
+
+        # 크랙 힌트
+        if user_id == 238978205078388747 and is_crack_enabled(user_id):
+            self.author.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
 
     def get_display_card(self, value):
         return {1: "A", 11: "J", 12: "Q", 13: "K"}.get(value, str(value))
@@ -1010,14 +1009,10 @@ class HighLowGame(discord.ui.View):
                 total *= odds
                 icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
                 line = f"{i}. {icon} {choice.title()} - x{odds:.2f} (누적: x{total:.2f})"
-
-                # 보너스 표시
                 if i == 5:
                     line += " ✅ 5연승 보너스 적용!"
                 elif i % 10 == 0:
-                    bonus = i  # 10, 20, 30...
-                    line += f" ✅ {bonus}연승 보너스 적용! (+{bonus}배)"
-
+                    line += f" ✅ {i}연승 보너스 적용! (+{i}배)"
                 lines.append(line)
 
             desc += "\n📜 기록\n" + "\n".join(lines)
@@ -1026,11 +1021,7 @@ class HighLowGame(discord.ui.View):
         else:
             desc += "\n아직 기록 없음"
 
-        embed = discord.Embed(
-            title="🎲 하이로우 게임",
-            description=desc,
-            color=discord.Color.blurple()
-        )
+        embed = discord.Embed(title="🎲 하이로우 게임", description=desc, color=discord.Color.blurple())
         embed.set_footer(text=f"현재 잔액: {get_balance(self.user_id):,}코인")
         return embed
 
@@ -1050,15 +1041,19 @@ class HighLowGame(discord.ui.View):
             self.odds_history.append((guess, odds))
             self.current_bet *= odds
             self.current = self.next_card
-            self.next_card = random.randint(1, 13)  # 다음 것도 미리
+            self.next_card = random.randint(1, 13)
 
-            # 보너스 갱신
             if self.streak == 5:
                 self.bonus_multiplier *= 2
             elif self.streak % 10 == 0:
                 self.bonus_multiplier *= self.streak
 
-            await interaction.response.edit_message(embed=self.build_embed(), view=self)
+            embed = self.build_embed()
+            if self.message:
+                await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=self)
+            else:
+                msg = await interaction.response.send_message(embed=embed, view=self)
+                self.message = await interaction.original_response()
         else:
             embed = discord.Embed(
                 title="❌ 실패!",
@@ -1069,7 +1064,11 @@ class HighLowGame(discord.ui.View):
                 color=discord.Color.red()
             )
             embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
-            await interaction.response.edit_message(embed=embed, view=None)
+
+            if self.message:
+                await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=None)
+            else:
+                await interaction.response.send_message(embed=embed, view=None)
 
     async def stop_game(self, interaction):
         total = 1.0
@@ -1077,7 +1076,6 @@ class HighLowGame(discord.ui.View):
             total *= odds
         total *= self.bonus_multiplier
         final_reward = int(self.base_bet * total)
-
         update_balance(self.user_id, final_reward, "하이로우 수익 지급")
 
         lines = []
@@ -1103,7 +1101,11 @@ class HighLowGame(discord.ui.View):
             color=discord.Color.gold()
         )
         embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}코인")
-        await interaction.response.edit_message(embed=embed, view=None)
+
+        if self.message:
+            await interaction.followup.edit_message(message_id=self.message.id, embed=embed, view=None)
+        else:
+            await interaction.response.send_message(embed=embed, view=None)
 
     @discord.ui.button(label="🔺 High", style=discord.ButtonStyle.green)
     async def high_btn(self, b, i): await self.process_guess(i, "high")
