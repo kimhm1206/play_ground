@@ -145,6 +145,7 @@ def register_slash_commands(bot: commands.Bot):
         )
         embed.set_footer(text="Develop by 배액호오")
 
+
         await ctx.respond(embed=embed)
             
     @bot.slash_command(
