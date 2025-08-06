@@ -136,7 +136,7 @@ def register_slash_commands(bot: commands.Bot):
             return
 
         embed = discord.Embed(
-            title="💼 {ctx.author.display_name} 님의 지갑",
+            title=f"💼 {ctx.author.display_name} 님의 지갑",
             description=(
                 f"💰 PG 머니 : {balance:,}원\n"
                 f"👛 PG 포인트 : {point:,}P"
