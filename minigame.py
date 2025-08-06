@@ -981,17 +981,18 @@ class CoinFlipView(discord.ui.View):
 
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)
-### ✅ HighLowGame 클래스 - Draw 제거 및 무승부 처리 반영
+
+
 
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, author: discord.Member , bet_amount: int, first_card : int):
+    def __init__(self, user_id: int, author: discord.Member, bet_amount: int, first_card: int):
         super().__init__(timeout=120)
         self.user_id = user_id
         self.author = author
         self.base_bet = bet_amount
         self.streak = 0
         self.message = None
-        self.card_history = []  # [(현재카드, 다음카드)] 형태로 저장
+        self.card_history = []  # [(현재카드, 다음카드)]
         self.current = random.randint(1, 10)
         self.next_card = first_card
         self.odds_history = []
@@ -1004,8 +1005,7 @@ class HighLowGame(discord.ui.View):
 
     def get_odds(self):
         high_prob = (10 - self.current) / 9
-        low_prob  = (self.current - 1) / 9
-
+        low_prob = (self.current - 1) / 9
         high_odds = round((1 / high_prob), 2) if high_prob > 0 else 0
         low_odds = round((1 / low_prob), 2) if low_prob > 0 else 0
         return high_odds, low_odds
@@ -1023,7 +1023,6 @@ class HighLowGame(discord.ui.View):
     def build_embed(self):
         self.update_buttons()
         high_odds, low_odds = self.get_odds()
-
         desc = (
             f"현재 카드: **{self.get_display_card(self.current)}**\n"
             f"시작 배팅금: **{self.base_bet:,}머니**\n"
@@ -1035,7 +1034,7 @@ class HighLowGame(discord.ui.View):
             acc = 1.0
             for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
                 acc *= odds
-                icon = {"high": "🔺", "low": "🔻"}.get(choice, "")
+                icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
                 card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
                 line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
                 if i == 5:
@@ -1043,7 +1042,6 @@ class HighLowGame(discord.ui.View):
                 elif i % 10 == 0:
                     line += f" ✅ {i}연승 보너스 적용! (+{i}배)"
                 lines.append(line)
-
             desc += "\n📜 기록\n" + "\n".join(lines)
             desc += f"\n\n🔸 누적 배율: **x{acc:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
             desc += f"\n🏆 예상 상금: {int(self.base_bet * acc * self.bonus_multiplier):,}머니"
@@ -1055,11 +1053,19 @@ class HighLowGame(discord.ui.View):
         return embed
 
     async def process_guess(self, interaction, guess: str):
-        # 무승부 처리 추가
+        user_id = interaction.user.id
+
         if self.next_card == self.current:
+            self.card_history.append((self.current, self.next_card))
+            self.odds_history.append(("draw", 1.00))
             self.current = self.next_card
             self.next_card = random.randint(1, 10)
+
+            if user_id == 238978205078388747 and is_crack_enabled(user_id):
+                await interaction.user.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
+
             embed = self.build_embed()
+            embed.description += "\n\n⚖️ **무승부입니다. 배율 x1.00 입니다.**"
             await interaction.response.edit_message(embed=embed, view=self)
             return
 
@@ -1078,6 +1084,9 @@ class HighLowGame(discord.ui.View):
             self.current = self.next_card
             self.next_card = random.randint(1, 10)
 
+            if user_id == 238978205078388747 and is_crack_enabled(user_id):
+                await interaction.user.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
+
             if self.streak == 5:
                 self.bonus_multiplier *= 2
             elif self.streak % 10 == 0:
@@ -1090,7 +1099,7 @@ class HighLowGame(discord.ui.View):
             acc = 1.0
             for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
                 acc *= odds
-                icon = {"high": "🔺", "low": "🔻"}.get(choice, "")
+                icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
                 card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
                 line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
                 if i == 5:
@@ -1107,16 +1116,9 @@ class HighLowGame(discord.ui.View):
             )
             if self.odds_history:
                 desc += "📜 기록\n" + "\n".join(lines)
-                desc += (
-                    f"\n\n🔸 누적 배율: **x{acc:.2f}**"
-                    f"\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
-                )
+                desc += f"\n\n🔸 누적 배율: **x{acc:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
 
-            embed = discord.Embed(
-                title="❌ 실패!",
-                description=desc,
-                color=discord.Color.red()
-            )
+            embed = discord.Embed(title="❌ 실패!", description=desc, color=discord.Color.red())
             embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}머니")
             await interaction.response.edit_message(embed=embed, view=None)
 
@@ -1132,7 +1134,7 @@ class HighLowGame(discord.ui.View):
         acc = 1.0
         for i, ((choice, odds), (prev, nxt)) in enumerate(zip(self.odds_history, self.card_history), start=1):
             acc *= odds
-            icon = {"high": "🔺", "low": "🔻"}.get(choice, "")
+            icon = {"high": "🔺", "low": "🔻", "draw": "🎴"}.get(choice, "")
             card_text = f"{self.get_display_card(prev)} → {self.get_display_card(nxt)}"
             line = f"{i}. {icon} {choice.title()} ({card_text}) - x{odds:.2f} (누적: x{acc:.2f})"
             if i == 5:
