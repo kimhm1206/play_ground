@@ -37,7 +37,7 @@ class CasinoLobbyView(discord.ui.View):
         )
         embed.add_field(
             name="🪙 동전던지기",
-            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)\n\n**",
+            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)**\n\n",
             inline=False
         )
         # embed.add_field(
