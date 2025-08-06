@@ -1,7 +1,7 @@
 import discord
 import requests
 from discord.ext import commands
-from utils.function import get_profile , save_anonymous_log, get_connection,get_balance
+from utils.function import get_profile , save_anonymous_log, get_connection,get_balance,get_pg_point
 
 DAILY_LIMIT = 360
 LEVEL_UNIT = 30
@@ -115,12 +115,13 @@ def register_slash_commands(bot: commands.Bot):
             ,ephemeral=True)
             
     @bot.slash_command(
-    name="지갑",
-    description="현재 보유 잔액을 확인합니다."
-)
+        name="지갑",
+        description="현재 보유 잔액을 확인합니다."
+    )
     async def 지갑(ctx: discord.ApplicationContext):
         user_id = ctx.author.id
         balance = get_balance(user_id)
+        point = get_pg_point(user_id)
 
         if balance is None:
             await ctx.respond(
@@ -129,21 +130,26 @@ def register_slash_commands(bot: commands.Bot):
             )
             return
 
-        embed = discord.Embed(
-            title="💰 PG 카지노 잔액 확인",
-            description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
-            color=discord.Color.gold()
+        msg = (
+            f"-----------------------------\n"
+            f"@{ctx.author.display_name} 님의 지갑\n\n"
+            f"💰 PG 머니 : {balance:,}원\n"
+            f"👛 PG 포인트 : {point:,}P\n\n"
+            f"Develop by 배액호오\n"
+            f"-----------------------------"
         )
-        embed.set_footer(text="Develop by 배액호오")
-        await ctx.respond(embed=embed, ephemeral=True)
-        
+
+        await ctx.respond(msg)  # ❗ 이 메시지는 모든 유저가 볼 수 있음
+    
+            
     @bot.slash_command(
-    name="잔액",
-    description="현재 보유 잔액을 확인합니다."
-)
+        name="잔액",
+        description="현재 보유 잔액을 확인합니다."
+    )
     async def 잔액(ctx: discord.ApplicationContext):
         user_id = ctx.author.id
         balance = get_balance(user_id)
+        point = get_pg_point(user_id)
 
         if balance is None:
             await ctx.respond(
@@ -152,13 +158,15 @@ def register_slash_commands(bot: commands.Bot):
             )
             return
 
-        embed = discord.Embed(
-            title="💰 PG 카지노 잔액 확인",
-            description=f"**{ctx.author.display_name}** 님의 현재 잔액은\n**{balance:,}원** 입니다!",
-            color=discord.Color.gold()
+        msg = (
+            f"-----------------------------\n"
+            f"@{ctx.author.display_name} 님의 지갑\n\n"
+            f"💰 PG 머니 : {balance:,}원\n"
+            f"👛 PG 포인트 : {point:,}P\n\n"
+            f"Develop by 배액호오\n"
+            f"-----------------------------"
         )
-        embed.set_footer(text="Develop by 배액호오")
-        await ctx.respond(embed=embed, ephemeral=True)
-            
-            
-            
+
+        await ctx.respond(msg)  # ❗ 이 메시지는 모든 유저가 볼 수 있음
+                
+                

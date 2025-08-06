@@ -43,7 +43,7 @@ class ChannelSettingsModal(Modal):
     def __init__(self, channel: discord.VoiceChannel):
         super().__init__(title="방 제목 변경")
         self.channel = channel
-        self.add_item(InputText(label="방 제목", placeholder="공백이면 수다방N", required=False))
+        self.add_item(InputText(label="방 제목", placeholder="공백이면 자유 수다방N", required=False))
 
     async def callback(self, interaction: discord.Interaction):
         try:
@@ -75,11 +75,11 @@ class ChannelSettingsModal(Modal):
 
             # 제목 자동 생성
             if not new_title_input:
-                existing = [c.name for c in category.voice_channels if "수다방" in c.name]
+                existing = [c.name for c in category.voice_channels if "자유 수다방" in c.name]
                 i = 1
-                while f"수다방{i}" in existing:
+                while f"자유 수다방{i}" in existing:
                     i += 1
-                new_title = f"수다방{i}"
+                new_title = f"자유 수다방{i}"
             else:
                 new_title = new_title_input
 

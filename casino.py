@@ -16,7 +16,7 @@ class CasinoLobbyView(discord.ui.View):
             description=result["message"],
             color=discord.Color.gold()
         )
-        embed.set_footer(text=f"잔액 : {result['balance']:,}코인")
+        embed.set_footer(text=f"잔액 : {result['balance']:,}머니")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -92,7 +92,7 @@ class CasinoLobbyView(discord.ui.View):
             ),
             inline=False
         )
-        embed.set_footer(text="베팅은 최소 500코인부터 가능합니다!")
+        embed.set_footer(text="베팅은 최소 500머니부터 가능합니다!")
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
@@ -118,7 +118,7 @@ class CasinoLobbyView(discord.ui.View):
             name = member.nick or member.display_name if member else f"Unknown({uid})"
             embed.add_field(
                 name=f"{medals[idx]} {name}",
-                value=f"💰 {bal:,}코인",
+                value=f"💰 {bal:,}머니",
                 inline=False
             )
 

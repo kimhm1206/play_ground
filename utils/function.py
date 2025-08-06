@@ -195,22 +195,45 @@ def give_daily_money(user_id: int) -> dict:
     now = now_kst()         # ✅ 현재 KST 시각
     today = now.date()      # ✅ 오늘 날짜 (KST)
 
+    # ✅ 레벨 조회 (없으면 기본 1)
+    cur.execute("""
+        SELECT level 
+        FROM voice_leaderboard 
+        WHERE user_id=%s
+    """, (user_id,))
+    lvl_row = cur.fetchone()
+    level = lvl_row[0] if lvl_row else 1
+
+    # ✅ 레벨 5 미만이면 지급 불가
+    if level < 5:
+        cur.close()
+        conn.close()
+        return {
+            "success": False,
+            "message": (
+                f"🚫 일당은 레벨 5 이상부터 받을 수 있어요!\n"
+                f"현재 레벨: {level}\n\n"
+                f"🎮 저희 PG에서는 **게임 이용 300시간** 달성 시 자동으로 레벨 5가 됩니다!"
+            ),
+            "amount": 0,
+            "balance": None
+        }
+
     # ✅ 유저 조회
     cur.execute("SELECT balance, last_donzoo_date FROM casino_users WHERE user_id=%s", (user_id,))
     row = cur.fetchone()
 
-    # 신규 유저면 2만코인 지급
+    # 신규 유저면 2만 + 1만 지급
     if not row:
         cur.execute("""
             INSERT INTO casino_users (user_id, balance, last_donzoo_date)
             VALUES (%s, %s, %s)
         """, (user_id, 30000, today))
 
-        # 거래 로그
         cur.execute("""
             INSERT INTO casino_transactions (user_id, type, amount, description, created_at)
             VALUES (%s, 'DONZOO', %s, '신규 유저 첫 일당 지급', %s)
-        """, (user_id, 30000, now))  # ✅ created_at = KST 시간
+        """, (user_id, 30000, now))
 
         conn.commit()
         cur.close()
@@ -225,21 +248,19 @@ def give_daily_money(user_id: int) -> dict:
     balance, last_donzoo_date = row
 
     # 오늘 이미 받았다면 실패
-    
     if last_donzoo_date == today:
         cur.close()
         conn.close()
         return {
             "success": False,
-            "message": "❌ 오늘은 이미 **돈줘**를 받았습니다. 내일 다시 시도하세요!",
+            "message": "❌ 오늘은 이미 **일당**을 받았습니다. 내일 다시 시도하세요!",
             "amount": 0,
             "balance": balance
         }
 
-    # 보유금 ≥ 20만코인이면 1만코인만 지급
+    # 보유금 ≥ 20만이면 1만, 아니면 2만
     지급금 = 10000 if balance >= 200_000 else 20000
 
-    # UPDATE (잔액 + 날짜 갱신)
     cur.execute("""
         UPDATE casino_users
         SET balance = balance + %s,
@@ -247,7 +268,6 @@ def give_daily_money(user_id: int) -> dict:
         WHERE user_id = %s
     """, (지급금, today, user_id))
 
-    # 거래 로그 기록 (created_at = KST)
     cur.execute("""
         INSERT INTO casino_transactions (user_id, type, amount, description, created_at)
         VALUES (%s, 'DONZOO', %s, '하루 일당 지급', %s)
@@ -264,6 +284,7 @@ def give_daily_money(user_id: int) -> dict:
         "amount": 지급금,
         "balance": new_balance
     }
+
     
 def get_bank_info(user_id: int) -> dict:
     """
@@ -608,3 +629,16 @@ def is_crack_enabled(user_id: int) -> bool:
     row = cur.fetchone()
     conn.close()
     return row is not None and row[0] is True
+
+def get_pg_point(user_id: int) -> int:
+    """유저의 PG 포인트 조회"""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT pg_point FROM casino_users WHERE user_id=%s", (user_id,))
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return row[0] if row else 0
