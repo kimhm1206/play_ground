@@ -259,7 +259,7 @@ def give_daily_money(user_id: int) -> dict:
         }
 
     # 보유금 ≥ 20만이면 1만, 아니면 2만
-    지급금 = 10000 if balance >= 200_000 else 20000
+    지급금 = 10000 if balance >= 1_000_000 else 20000
 
     cur.execute("""
         UPDATE casino_users
