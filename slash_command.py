@@ -125,22 +125,24 @@ def register_slash_commands(bot: commands.Bot):
 
         if balance is None:
             await ctx.respond(
-                f"❌ 아직 카지노에 등록되지 않았습니다!\n먼저 **/일당**으로 시작해보세요!",
+                "❌ 아직 카지노에 등록되지 않았습니다!\n"
+                "로비에서 **일당 버튼**을 클릭해 시작하세요!",
                 ephemeral=True
             )
             return
 
-        msg = (
-            f"-----------------------------\n"
-            f"@{ctx.author.display_name} 님의 지갑\n\n"
-            f"💰 PG 머니 : {balance:,}원\n"
-            f"👛 PG 포인트 : {point:,}P\n\n"
-            f"Develop by 배액호오\n"
-            f"-----------------------------"
+        embed = discord.Embed(
+            title="💼 PG 카지노 지갑",
+            description=(
+                f"@{ctx.author.display_name} 님의 지갑\n\n"
+                f"💰 PG 머니 : {balance:,}원\n"
+                f"👛 PG 포인트 : {point:,}P"
+            ),
+            color=discord.Color.gold()
         )
+        embed.set_footer(text="Develop by 배액호오")
 
-        await ctx.respond(msg)  # ❗ 이 메시지는 모든 유저가 볼 수 있음
-    
+        await ctx.respond(embed=embed)
             
     @bot.slash_command(
         name="잔액",
@@ -153,20 +155,21 @@ def register_slash_commands(bot: commands.Bot):
 
         if balance is None:
             await ctx.respond(
-                f"❌ 아직 카지노에 등록되지 않았습니다!\n먼저 **/일당**으로 시작해보세요!",
+                "❌ 아직 카지노에 등록되지 않았습니다!\n"
+                "로비에서 **일당 버튼**을 클릭해 시작하세요!",
                 ephemeral=True
             )
             return
 
-        msg = (
-            f"-----------------------------\n"
-            f"@{ctx.author.display_name} 님의 지갑\n\n"
-            f"💰 PG 머니 : {balance:,}원\n"
-            f"👛 PG 포인트 : {point:,}P\n\n"
-            f"Develop by 배액호오\n"
-            f"-----------------------------"
+        embed = discord.Embed(
+            title="💼 PG 카지노 지갑",
+            description=(
+                f"@{ctx.author.display_name} 님의 지갑\n\n"
+                f"💰 PG 머니 : {balance:,}원\n"
+                f"👛 PG 포인트 : {point:,}P"
+            ),
+            color=discord.Color.gold()
         )
+        embed.set_footer(text="Develop by 배액호오")
 
-        await ctx.respond(msg)  # ❗ 이 메시지는 모든 유저가 볼 수 있음
-                
-                
+        await ctx.respond(embed=embed)
