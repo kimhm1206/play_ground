@@ -126,17 +126,17 @@ def register_game_commands(bot: commands.Bot):
         # ✅ 패턴 결정 (확률 기반)
         if roll <= 1:        
             pattern = "잭팟"
-        elif roll <= 10:              
+        elif roll <= 6:              
             pattern = "다이아"
-        elif roll <= 20:                
+        elif roll <= 14:                
             pattern = "황금"
-        elif roll <= 30:                 
+        elif roll <= 24:                 
             pattern = "폭탄"
-        elif roll <= 50:               
+        elif roll <= 34:               
             pattern = "과일3"
-        elif roll <= 80:                
+        elif roll <= 59:                
             pattern = "과일모둠"
-        elif roll <= 630:               
+        elif roll <= 609:               
             pattern = "꽝"
         else:                       
             pattern = "두개매치"
@@ -214,13 +214,15 @@ def register_game_commands(bot: commands.Bot):
         # ✅ 손익 계산
         if pattern == "폭탄":
             # ✅ 기본 패널티 = 배팅금의 30배
-            penalty_by_bet = 배팅금 * 20
+            penalty_by_bet = 배팅금 * 10
             
             # ✅ 최대 패널티 = 보유잔액의 80%
-            penalty_by_balance = int(balance * 0.8)
+            penalty_by_balance = int(balance * 0.5)
             
             # ✅ 실제 차감액 = 두 값 중 더 작은 것
-            loss = penalty_by_bet if penalty_by_bet <= penalty_by_balance else penalty_by_balance
+            loss = min(penalty_by_bet, penalty_by_balance)
+            
+            loss = max(loss, 배팅금)
             
             # ✅ 최종 잔액
             final_balance = balance - loss
@@ -229,10 +231,10 @@ def register_game_commands(bot: commands.Bot):
             # ✅ 안내 메시지
             if loss == penalty_by_bet:
                 # 기본 배팅금 30배 패널티
-                result_line = f"-{loss:,}머니 (폭탄 패널티: 배팅금 20배 차감)"
+                result_line = f"-{loss:,}머니 (폭탄 패널티: 배팅금 10배 차감)"
             else:
                 # 보유 잔액 80% 초과했으므로 80%만 차감
-                result_line = f"-{loss:,}머니 (잔액 80% 차감)"
+                result_line = f"-{loss:,}머니 (잔액 50% 차감)"
             
             color = discord.Color.dark_red()
 
