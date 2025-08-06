@@ -642,3 +642,63 @@ def get_pg_point(user_id: int) -> int:
     conn.close()
 
     return row[0] if row else 0
+
+# ✅ 유저 등록 여부 확인
+def is_user_registered(user_id: int) -> bool:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT 1 FROM casino_users WHERE user_id=%s", (user_id,))
+    exists = cur.fetchone() is not None
+    cur.close()
+    conn.close()
+    return exists
+
+# ✅ 유저 레벨 조회 (없으면 1로 처리)
+def get_level(user_id: int) -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT level FROM voice_leaderboard WHERE user_id=%s", (user_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return row[0] if row else 1
+
+# ✅ 송금자 → 수신자 오늘 보낸 금액 총합
+def get_today_sent_to_user(sender_id: int, receiver_id: int, date) -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COALESCE(SUM(ABS(amount)), 0)
+        FROM casino_transactions
+        WHERE user_id=%s AND type='SENDER' AND description=%s AND DATE(created_at)=%s
+    """, (sender_id, str(receiver_id), date))
+    result = cur.fetchone()[0]
+    cur.close()
+    conn.close()
+    return result
+
+# ✅ 수신자 ← 송금자로부터 오늘 받은 금액 총합
+def get_today_received_from_user(receiver_id: int, sender_id: int, date) -> int:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT COALESCE(SUM(amount), 0)
+        FROM casino_transactions
+        WHERE user_id=%s AND type='RECEIVER' AND description=%s AND DATE(created_at)=%s
+    """, (receiver_id, str(sender_id), date))
+    result = cur.fetchone()[0]
+    cur.close()
+    conn.close()
+    return result
+
+# ✅ 트랜잭션 기록 삽입
+def insert_transaction(user_id: int, tx_type: str, amount: int, description: str, created_at):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        INSERT INTO casino_transactions (user_id, type, amount, description, created_at)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (user_id, tx_type, amount, description, created_at))
+    conn.commit()
+    cur.close()
+    conn.close()

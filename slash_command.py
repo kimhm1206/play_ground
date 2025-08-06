@@ -2,7 +2,11 @@ import discord
 import requests
 from discord.ext import commands
 from utils.function import get_profile , save_anonymous_log, get_connection,get_balance,get_pg_point
-
+from utils.function import (
+    now_kst, get_balance, get_level, is_user_registered,
+    get_today_sent_to_user, get_today_received_from_user,
+    update_balance, insert_transaction
+)
 DAILY_LIMIT = 360
 LEVEL_UNIT = 30
 WEBHOOK_URL = "https://discord.com/api/webhooks/1384529950782263408/2mIMMUVH790rezgL432Q4GWyssoL9WcBZxP9lrJNvtEfmRHrxoIPEYABnM_Gar-ljGg8"
@@ -173,3 +177,79 @@ def register_slash_commands(bot: commands.Bot):
         embed.set_footer(text="Develop by 배액호오")
 
         await ctx.respond(embed=embed)
+        
+    @bot.slash_command(name="송금", description="다른 유저에게 머니를 송금합니다.")
+    async def 송금(
+        ctx: discord.ApplicationContext,
+        대상: discord.Member,
+        금액: discord.Option(int, "송금할 금액 (최소 500머니)")  # type: ignore
+    ):
+        sender_id = ctx.author.id
+        receiver_id = 대상.id
+
+        if sender_id == receiver_id:
+            await ctx.respond("❌ 본인에게는 송금할 수 없습니다!", ephemeral=True)
+            return
+
+        if 금액 < 500:
+            await ctx.respond("❌ 송금 금액은 최소 **500머니** 이상이어야 합니다!", ephemeral=True)
+            return
+
+        if not is_user_registered(sender_id):
+            await ctx.respond("❌ 먼저 일당을 받아 PG 카지노에 가입해 주세요!", ephemeral=True)
+            return
+
+        sender_balance = get_balance(sender_id)
+        if sender_balance < 금액:
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: **{sender_balance:,}머니**", ephemeral=True)
+            return
+
+        if not is_user_registered(receiver_id):
+            await ctx.respond(
+                "❌ 수신자가 아직 PG 카지노에 등록되지 않았습니다.\n"
+                "📢 수신자에게 '일당' 버튼을 눌러 가입하도록 안내해주세요!",
+                ephemeral=True
+            )
+            return
+
+        now = now_kst()
+        today = now.date()
+
+        sender_level = get_level(sender_id)
+        receiver_level = get_level(receiver_id)
+
+        sender_limit = sender_level * 10_000
+        receiver_limit = receiver_level * 10_000
+
+        sent_today = get_today_sent_to_user(sender_id, receiver_id, today)
+        if sent_today + 금액 > sender_limit:
+            await ctx.respond(
+                f"❌ 송금 한도 초과!\n"
+                f"📤 당신의 레벨({sender_level}) 기준 1인당 하루 최대 **{sender_limit:,}머니** 송금 가능\n"
+                f"현재 이 유저에게 보낸 금액: **{sent_today:,}머니**",
+                ephemeral=True
+            )
+            return
+
+        received_today = get_today_received_from_user(receiver_id, sender_id, today)
+        if received_today + 금액 > receiver_limit:
+            await ctx.respond(
+                f"❌ 수신 한도 초과!\n"
+                f"📥 수신자 레벨({receiver_level}) 기준 1인당 하루 최대 **{receiver_limit:,}머니** 수신 가능\n"
+                f"오늘 당신으로부터 받은 금액: **{received_today:,}머니**",
+                ephemeral=True
+            )
+            return
+
+        update_balance(sender_id, -금액, f"→ {receiver_id}")
+        update_balance(receiver_id, 금액, f"← {sender_id}")
+
+        insert_transaction(sender_id, 'SENDER', -금액, str(receiver_id), now)
+        insert_transaction(receiver_id, 'RECEIVER', 금액, str(sender_id), now)
+        
+        try:
+            await 대상.send(f"📩 {ctx.author.display_name} 님이 당신에게 **{금액:,}머니**를 송금했습니다!")
+        except discord.Forbidden:
+            pass  # DM 차단한 경우 무시
+
+        await ctx.respond(f"✅ {ctx.author.display_name} → {대상.display_name} 님께 **{금액:,}머니** 송금 완료!")

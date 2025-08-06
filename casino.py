@@ -159,3 +159,5 @@ async def send_casino_lobby(bot: discord.Client):
     view = CasinoLobbyView()
     await channel.send(embed=embed, view=view)
     print("✅ PG 카지노 로비 생성 완료!")
+
+
