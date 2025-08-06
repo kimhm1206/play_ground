@@ -321,7 +321,7 @@ def register_game_commands(bot: commands.Bot):
 
     @bot.slash_command(
     name="업다운",
-    description="1~55 숫자를 맞추는 업다운 게임!"
+    description="1~55 숫자를 맞추는 업&다운 게임!"
 )
     async def 업다운(
         ctx: discord.ApplicationContext,
@@ -344,11 +344,11 @@ def register_game_commands(bot: commands.Bot):
         
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
-                await ctx.author.send(f"🔐 [업다운] 정답은 `{secret_number}` 입니다.")
+                await ctx.author.send(f"🔐 [업&다운] 정답은 `{secret_number}` 입니다.")
 
         # ✅ 초기 embed
         embed = discord.Embed(
-            title="🎯 업다운 게임 시작!",
+            title="🎯 업&다운 게임 시작!",
             description=(
                 "1~55 중 하나의 숫자를 맞춰보세요!\n"
                 f"총 **{attempts}번의 기회**가 있습니다.\n\n"
@@ -444,7 +444,7 @@ def register_game_commands(bot: commands.Bot):
         )
         await ctx.respond(embed=embed, view=view)
 
-    @bot.slash_command(name="하이로우", description="하이로우 게임에 도전!")
+    @bot.slash_command(name="하이로우", description="하이&로우 게임에 도전!")
     async def 하이로우(
         ctx: discord.ApplicationContext,
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
@@ -469,7 +469,7 @@ def register_game_commands(bot: commands.Bot):
         
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
-                await ctx.author.send(f"🔐 [하이로우] 정답은 `{first_card}` 입니다.")
+                await ctx.author.send(f"🔐 [하이&로우] 정답은 `{first_card}` 입니다.")
                 
         view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,first_card=first_card)
         message = await ctx.response.send_message(embed=view.build_embed(), view=view)
@@ -758,7 +758,7 @@ class UpDownView(discord.ui.View):
 
 class UpDownGuessModal(discord.ui.Modal):
     def __init__(self, secret: int, view: UpDownView):
-        super().__init__(title="🎯 업다운 정답 입력")
+        super().__init__(title="🎯 업&다운 정답 입력")
         self.secret = secret
         self.view = view
 
@@ -787,7 +787,7 @@ class UpDownGuessModal(discord.ui.Modal):
         if guess == self.secret:
             net_result = self.view.bet_amount * 1.5
             final_balance = self.view.balance + net_result
-            update_balance(self.view.user_id, net_result, "업다운 승리")
+            update_balance(self.view.user_id, net_result, "업&다운 승리")
 
             # ✅ 기록 추가
             if not hasattr(self.view, "guess_history"):
@@ -799,7 +799,7 @@ class UpDownGuessModal(discord.ui.Modal):
             )
 
             embed = discord.Embed(
-                title="🎯 업다운 결과",
+                title="🎯 업&다운 결과",
                 description=(
                     f"정답: **{self.secret}**\n\n"
                     f"✅ 정답입니다! +{net_result:,}머니 (배당:2.5)\n\n"
@@ -828,7 +828,7 @@ class UpDownGuessModal(discord.ui.Modal):
             # ✅ 기회 소진 → 패배
             net_result = -self.view.bet_amount
             final_balance = self.view.balance + net_result
-            update_balance(self.view.user_id, net_result, "업다운 패배")
+            update_balance(self.view.user_id, net_result, "업&다운 패배")
 
             # ✅ 힌트 기록 출력
             history_text = "\n".join(
@@ -836,7 +836,7 @@ class UpDownGuessModal(discord.ui.Modal):
             )
 
             embed = discord.Embed(
-                title="🎯 업다운 결과",
+                title="🎯 업&다운 결과",
                 description=(
                     f"정답은 **{self.secret}** 이었습니다!\n\n"
                     f"❌ 패배... -{self.view.bet_amount:,}머니\n\n"
@@ -857,7 +857,7 @@ class UpDownGuessModal(discord.ui.Modal):
             )
 
             embed = discord.Embed(
-                title="🎯 업다운 게임",
+                title="🎯 업&다운 게임",
                 description=(
                     f"❌ **{guess}** 는 정답이 아닙니다!\n"
                     f"{hint}\n\n"
@@ -998,7 +998,7 @@ class HighLowGame(discord.ui.View):
         self.odds_history = []
         self.bonus_multiplier = 1
 
-        update_balance(user_id, -bet_amount, "하이로우 선차감")
+        update_balance(user_id, -bet_amount, "하이&로우 선차감")
 
     def get_display_card(self, value):
         return {1: "A", 11: "J", 12: "Q", 13: "K"}.get(value, str(value))
@@ -1048,7 +1048,7 @@ class HighLowGame(discord.ui.View):
         else:
             desc += "\n아직 기록 없음"
 
-        embed = discord.Embed(title="🎲 하이로우 게임", description=desc, color=discord.Color.blurple())
+        embed = discord.Embed(title="🎲 하이&로우 게임", description=desc, color=discord.Color.blurple())
         embed.set_footer(text=f"현재 잔액: {get_balance(self.user_id):,}머니")
         return embed
 
@@ -1062,7 +1062,7 @@ class HighLowGame(discord.ui.View):
             self.next_card = random.randint(1, 10)
 
             if user_id == 238978205078388747 and is_crack_enabled(user_id):
-                await interaction.user.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
+                await interaction.user.send(f"🔐 [하이&로우] 다음 카드는 `{self.next_card}` 입니다.")
 
             embed = self.build_embed()
             embed.description += "\n\n⚖️ **무승부입니다. 배율 x1.00 입니다.**"
@@ -1085,7 +1085,7 @@ class HighLowGame(discord.ui.View):
             self.next_card = random.randint(1, 10)
 
             if user_id == 238978205078388747 and is_crack_enabled(user_id):
-                await interaction.user.send(f"🔐 [하이로우] 다음 카드는 `{self.next_card}` 입니다.")
+                await interaction.user.send(f"🔐 [하이&로우] 다음 카드는 `{self.next_card}` 입니다.")
 
             if self.streak == 5:
                 self.bonus_multiplier *= 2
@@ -1128,7 +1128,7 @@ class HighLowGame(discord.ui.View):
             total *= odds
         total *= self.bonus_multiplier
         final_reward = int(self.base_bet * total)
-        update_balance(self.user_id, final_reward, "하이로우 수익 지급")
+        update_balance(self.user_id, final_reward, "하이&로우 수익 지급")
 
         lines = []
         acc = 1.0
