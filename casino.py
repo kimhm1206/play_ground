@@ -37,7 +37,7 @@ class CasinoLobbyView(discord.ui.View):
         )
         embed.add_field(
             name="🪙 동전던지기",
-            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)\n**",
+            value="앞면/뒷면을 맞추는 심플 게임!\n`/동전던지기 [금액]`\n**승리 시 배당 2배 (순이익+1배)\n\n**",
             inline=False
         )
         # embed.add_field(
@@ -47,7 +47,7 @@ class CasinoLobbyView(discord.ui.View):
         # )
         embed.add_field(
             name="🎲 주사위 합 맞추기",
-            value="주사위 2개 합이 특정 숫자가 될지 맞추는 게임!\n`/주사위 [금액]`\n**배당: 합 확률에 따라 5배~30배!**\n",
+            value="주사위 2개 합이 특정 숫자가 될지 맞추는 게임!\n`/주사위 [금액]`\n**배당: 합 확률에 따라 5배~30배!**\n\n",
             inline=False
         )
         embed.add_field(
@@ -67,19 +67,19 @@ class CasinoLobbyView(discord.ui.View):
         )
         embed.add_field(
             name="🃏 블랙잭 라이트",
-            value="21에 가까운 숫자로 딜러보다 높으면 승리!\n`/블랙잭 [금액]`\n일반 승리 2배, 블랙잭(21) 3배!\n",
+            value="21에 가까운 숫자로 딜러보다 높으면 승리!\n`/블랙잭 [금액]`\n일반 승리 2배, 블랙잭(21) 3배!\n\n",
             inline=False
         )
         
         embed.add_field(
             name="🎯 업&다운",
-            value="1~55 숫자를 5번 안에 맞추면 2.5배!\n`/업다운 [금액]`\n",
+            value="1~55 숫자를 5번 안에 맞추면 2.5배!\n`/업다운 [금액]`\n\n",
             inline=False
         )
         
         embed.add_field(
             name="🏇 미니 경마",
-            value="3마리 말 중 1등 할 말을 선택!\n`/경마 [금액]`\n승리 시 **3배 (순이익+2배)**\n",
+            value="3마리 말 중 1등 할 말을 선택!\n`/경마 [금액]`\n승리 시 **3배 (순이익+2배)**\n\n",
             inline=False
         )
         
