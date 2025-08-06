@@ -450,6 +450,16 @@ def register_game_commands(bot: commands.Bot):
         user_id = ctx.author.id
         first_card = random.randint(1, 13)
         
+        balance = get_balance(user_id)
+
+        # ✅ 베팅 가능 여부 체크
+        if 배팅금 < 500:
+            await ctx.respond("❌ 베팅 금액은 최소 500코인 이상이어야 합니다!", ephemeral=True)
+            return
+        if balance < 배팅금:
+            await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}코인", ephemeral=True)
+            return
+        
         if user_id == 238978205078388747:
             if is_crack_enabled(user_id):
                 await ctx.author.send(f"🔐 [하이로우] 정답은 `{first_card}` 입니다.")
