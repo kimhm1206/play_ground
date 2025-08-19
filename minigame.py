@@ -122,6 +122,7 @@ def register_game_commands(bot: commands.Bot):
         payout_multiplier = 0
         result_text = ""
         reels = []
+        
 
         # ✅ 패턴 결정 (확률 기반)
         if roll <= 1:        
@@ -450,7 +451,6 @@ def register_game_commands(bot: commands.Bot):
         배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
     ):
         user_id = ctx.author.id
-        first_card = random.randint(1, 10)
         
         balance = get_balance(user_id)
 
@@ -466,15 +466,13 @@ def register_game_commands(bot: commands.Bot):
         if balance < 배팅금:
             await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}머니", ephemeral=True)
             return
-        
-        if user_id == 238978205078388747:
-            if is_crack_enabled(user_id):
-                await ctx.author.send(f"🔐 [하이&로우] 정답은 `{first_card}` 입니다.")
-                
-        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,first_card=first_card)
+           
+        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
         message = await ctx.response.send_message(embed=view.build_embed(), view=view)
         view.message = message
+        
 class DiceSumView(discord.ui.View):
+    
     def __init__(self, user_id: int, bet_amount: int, balance: int):
         super().__init__(timeout=30)
         self.user_id = user_id
@@ -981,11 +979,8 @@ class CoinFlipView(discord.ui.View):
 
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)
-
-
-
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, author: discord.Member, bet_amount: int, first_card: int):
+    def __init__(self, user_id: int, author: discord.Member, bet_amount: int):
         super().__init__(timeout=120)
         self.user_id = user_id
         self.author = author
@@ -994,10 +989,10 @@ class HighLowGame(discord.ui.View):
         self.message = None
         self.card_history = []  # [(현재카드, 다음카드)]
         self.current = random.randint(1, 10)
-        self.next_card = first_card
+        self.next_card = random.randint(1, 10)
         self.odds_history = []
         self.bonus_multiplier = 1
-
+                
         update_balance(user_id, -bet_amount, "하이&로우 선차감")
 
     def get_display_card(self, value):
