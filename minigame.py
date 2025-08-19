@@ -445,31 +445,60 @@ def register_game_commands(bot: commands.Bot):
         )
         await ctx.respond(embed=embed, view=view)
 
+    # @bot.slash_command(name="하이로우", description="하이&로우 게임에 도전!")
+    # async def 하이로우(
+    #     ctx: discord.ApplicationContext,
+    #     배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
+    # ):
+    #     user_id = ctx.author.id
+        
+    #     balance = get_balance(user_id)
+
+    #     # ✅ 베팅 가능 여부 체크
+    #     if 배팅금 < 500:
+    #         await ctx.respond("❌ 베팅 금액은 최소 500머니 이상이어야 합니다!", ephemeral=True)
+    #         return
+        
+    #     if 배팅금 > 50000:
+    #         await ctx.respond("❌ 베팅 금액은 최대 50000머니 입니다!", ephemeral=True)
+    #         return
+        
+    #     if balance < 배팅금:
+    #         await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}머니", ephemeral=True)
+    #         return
+           
+    #     view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
+    #     message = await ctx.response.send_message(embed=view.build_embed(), view=view)
+    #     view.message = message
+    
     @bot.slash_command(name="하이로우", description="하이&로우 게임에 도전!")
     async def 하이로우(
         ctx: discord.ApplicationContext,
-        배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
+        배팅금: discord.Option(int, description="베팅금 입력")  # type: ignore
     ):
         user_id = ctx.author.id
-        
         balance = get_balance(user_id)
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
             await ctx.respond("❌ 베팅 금액은 최소 500머니 이상이어야 합니다!", ephemeral=True)
             return
-        
+
         if 배팅금 > 50000:
             await ctx.respond("❌ 베팅 금액은 최대 50000머니 입니다!", ephemeral=True)
             return
-        
+
         if balance < 배팅금:
             await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}머니", ephemeral=True)
             return
-           
-        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
-        message = await ctx.response.send_message(embed=view.build_embed(), view=view)
-        view.message = message
+
+        # ✅ View 먼저 전송 (embed 없이)
+        view = HighLowGame(user_id=user_id, author=ctx.author, bet_amount=배팅금)
+        await ctx.respond(view=view)  # 버튼만 먼저 표시
+
+        # ✅ 버튼이 View에 등록된 후, embed 생성 및 업데이트
+        view.message = await ctx.original_response()
+        await view.message.edit(embed=view.build_embed(), view=view)
         
 class DiceSumView(discord.ui.View):
     
