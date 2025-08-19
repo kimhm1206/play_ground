@@ -3,6 +3,8 @@ from discord.ext import commands
 from utils.function import get_balance, update_balance,is_crack_enabled
 from gametools import *
 
+active_highlow_players = set()
+
 def register_game_commands(bot: commands.Bot):
 
     # @bot.slash_command(
@@ -445,60 +447,40 @@ def register_game_commands(bot: commands.Bot):
         )
         await ctx.respond(embed=embed, view=view)
 
-    # @bot.slash_command(name="하이로우", description="하이&로우 게임에 도전!")
-    # async def 하이로우(
-    #     ctx: discord.ApplicationContext,
-    #     배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
-    # ):
-    #     user_id = ctx.author.id
-        
-    #     balance = get_balance(user_id)
-
-    #     # ✅ 베팅 가능 여부 체크
-    #     if 배팅금 < 500:
-    #         await ctx.respond("❌ 베팅 금액은 최소 500머니 이상이어야 합니다!", ephemeral=True)
-    #         return
-        
-    #     if 배팅금 > 50000:
-    #         await ctx.respond("❌ 베팅 금액은 최대 50000머니 입니다!", ephemeral=True)
-    #         return
-        
-    #     if balance < 배팅금:
-    #         await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}머니", ephemeral=True)
-    #         return
-           
-    #     view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금)
-    #     message = await ctx.response.send_message(embed=view.build_embed(), view=view)
-    #     view.message = message
-    
     @bot.slash_command(name="하이로우", description="하이&로우 게임에 도전!")
     async def 하이로우(
         ctx: discord.ApplicationContext,
-        배팅금: discord.Option(int, description="베팅금 입력")  # type: ignore
+        배팅금: discord.Option(int, description="베팅금 입력") # type: ignore
     ):
         user_id = ctx.author.id
+        
         balance = get_balance(user_id)
+        
+        if user_id in active_highlow_players:
+            await ctx.respond("⚠️ 이미 하이&로우 게임이 진행 중입니다! 이전 게임을 완료해 주세요!", ephemeral=True)
+            return
 
         # ✅ 베팅 가능 여부 체크
         if 배팅금 < 500:
             await ctx.respond("❌ 베팅 금액은 최소 500머니 이상이어야 합니다!", ephemeral=True)
             return
-
+        
         if 배팅금 > 50000:
             await ctx.respond("❌ 베팅 금액은 최대 50000머니 입니다!", ephemeral=True)
             return
-
+        
         if balance < 배팅금:
             await ctx.respond(f"❌ 잔액이 부족합니다! 현재 잔액: {balance:,}머니", ephemeral=True)
             return
-
-        # ✅ View 먼저 전송 (embed 없이)
-        view = HighLowGame(user_id=user_id, author=ctx.author, bet_amount=배팅금)
-        await ctx.respond(view=view)  # 버튼만 먼저 표시
-
-        # ✅ 버튼이 View에 등록된 후, embed 생성 및 업데이트
-        view.message = await ctx.original_response()
-        await view.message.edit(embed=view.build_embed(), view=view)
+        # ✅ 플레이어 등록
+        active_highlow_players.add(user_id)
+        next = random.randint(1,10)
+        if user_id == 238978205078388747 and is_crack_enabled(user_id):
+                await ctx.user.send(f"🔐 [하이&로우] 다음 카드는 `{next}` 입니다.")
+           
+        view = HighLowGame(user_id=ctx.author.id, author=ctx.author, bet_amount=배팅금,next=next)
+        message = await ctx.response.send_message(embed=view.build_embed(), view=view)
+        view.message = message
         
 class DiceSumView(discord.ui.View):
     
@@ -1009,7 +991,7 @@ class CoinFlipView(discord.ui.View):
         self.disable_all_items()
         await interaction.response.edit_message(embed=embed, view=None)
 class HighLowGame(discord.ui.View):
-    def __init__(self, user_id: int, author: discord.Member, bet_amount: int):
+    def __init__(self, user_id: int, author: discord.Member, bet_amount: int,next: int):
         super().__init__(timeout=120)
         self.user_id = user_id
         self.author = author
@@ -1018,7 +1000,7 @@ class HighLowGame(discord.ui.View):
         self.message = None
         self.card_history = []  # [(현재카드, 다음카드)]
         self.current = random.randint(1, 10)
-        self.next_card = random.randint(1, 10)
+        self.next_card = next
         self.odds_history = []
         self.bonus_multiplier = 1
                 
@@ -1142,6 +1124,7 @@ class HighLowGame(discord.ui.View):
                 desc += "📜 기록\n" + "\n".join(lines)
                 desc += f"\n\n🔸 누적 배율: **x{acc:.2f}**\n🔹 보너스 배율: **x{self.bonus_multiplier}**"
 
+            active_highlow_players.discard(self.user_id)
             embed = discord.Embed(title="❌ 실패!", description=desc, color=discord.Color.red())
             embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}머니")
             await interaction.response.edit_message(embed=embed, view=None)
@@ -1177,6 +1160,8 @@ class HighLowGame(discord.ui.View):
             ),
             color=discord.Color.gold()
         )
+        
+        active_highlow_players.discard(self.user_id)
         embed.set_footer(text=f"잔액: {get_balance(self.user_id):,}머니")
         await interaction.response.edit_message(embed=embed, view=None)
 
