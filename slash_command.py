@@ -1,16 +1,27 @@
 import discord
-import requests
+import asyncio
+import os
+from openai import OpenAI
 from discord.ext import commands
 from utils.function import get_profile , save_anonymous_log, get_connection,get_balance,get_pg_point
 from utils.function import (
     now_kst, get_balance, get_level, is_user_registered,
     get_today_sent_to_user, get_today_received_from_user,
-    update_balance, insert_transaction
+    update_balance, insert_transaction,edit_tts_type,get_tts_type,get_openai_token
 )
+
+tts_queue = asyncio.Queue()   # ✅ 메시지 큐
+is_playing = False            # ✅ 현재 재생 상태
+openai_token = get_openai_token()
 DAILY_LIMIT = 360
 LEVEL_UNIT = 30
 WEBHOOK_URL = "https://discord.com/api/webhooks/1384529950782263408/2mIMMUVH790rezgL432Q4GWyssoL9WcBZxP9lrJNvtEfmRHrxoIPEYABnM_Gar-ljGg8"
 TARGET_CHANNEL_ID = 1384527567280930859
+CASINO_ALERT_CHANNEL_ID = 1398040397338509443
+# 현재 봇 음성 연결 상태 저장
+current_vc: discord.VoiceClient | None = None
+tts_text_channel_id: int | None = None  # ✅ 읽을 텍스트 채널 ID 저장
+
 # 메인 봇 객체가 있는 곳에서 불러올 예정이므로 Cog 사용 X
 def register_slash_commands(bot: commands.Bot):
     
@@ -185,7 +196,7 @@ def register_slash_commands(bot: commands.Bot):
     ):
         sender_id = ctx.author.id
         receiver_id = 대상.id
-
+        await ctx.defer()
         if sender_id == receiver_id:
             await ctx.respond("❌ 본인에게는 송금할 수 없습니다!", ephemeral=True)
             return
@@ -245,10 +256,133 @@ def register_slash_commands(bot: commands.Bot):
 
         insert_transaction(sender_id, 'SENDER', -금액, str(receiver_id), now)
         insert_transaction(receiver_id, 'RECEIVER', 금액, str(sender_id), now)
+        alert_channel = bot.get_channel(CASINO_ALERT_CHANNEL_ID)
+        
         
         try:
+            await alert_channel.send(f"✅ {ctx.author.display_name} 님이 → {대상.display_name} 님께 **{금액:,}머니**를 송금 했어요!")
             await 대상.send(f"📩 {ctx.author.display_name} 님이 당신에게 **{금액:,}머니**를 송금했습니다!")
         except discord.Forbidden:
             pass  # DM 차단한 경우 무시
 
-        await ctx.respond(f"✅ {ctx.author.display_name} → {대상.display_name} 님께 **{금액:,}머니** 송금 완료!")
+        await ctx.followup.send(f"✅ {ctx.author.display_name} → {대상.display_name} 님께 **{금액:,}머니** 송금 완료!")
+        
+    # 🎙️ /들어와
+    @bot.slash_command(name="들어와", description="몰리봇을 현재 음성 채널에 들어오게 합니다")
+    async def join(ctx: discord.ApplicationContext):
+        global current_vc, tts_text_channel_id
+
+        if ctx.author.voice is None:
+            await ctx.respond("❌ 먼저 음성 채널에 들어가주세요!", ephemeral=True)
+            return
+
+        channel = ctx.author.voice.channel
+
+        # ✅ 플립플롭 (이미 사용 중이면 막기)
+        if current_vc and current_vc.is_connected():
+            if current_vc.channel.id == channel.id:
+                await ctx.respond(f"⚠️ 이미 `{channel.name}` 에 접속 중입니다!")
+            else:
+                await ctx.respond("❌ 이미 다른 채널에서 사용 중입니다. 종료 후 다시 시도하세요.", ephemeral=True)
+            return
+
+        # 음성 채널 접속
+        current_vc = await channel.connect()
+        # ✅ 이 명령어를 입력한 텍스트 채널 저장
+        tts_text_channel_id = ctx.channel.id
+
+        await ctx.respond(f"✅ `나 왔다.")
+
+    # 🎙️ /나가
+    @bot.slash_command(name="나가", description="몰리봇을 음성 채널에서 내보냅니다")
+    async def 나가(ctx: discord.ApplicationContext):
+        global current_vc
+        if ctx.voice_client:
+            await ctx.voice_client.disconnect()
+            current_vc = None
+            await ctx.respond("👋 알았어.. 꺼질게..")
+        else:
+            await ctx.respond("❌ 현재 음성 채널에 없습니다")
+
+
+    @bot.slash_command(name="tts설정", description="몰리봇 목소리 타입을 설정합니다")
+    async def tts설정(
+        ctx: discord.ApplicationContext,
+        voice: discord.Option(  # type: ignore
+            str,
+            "사용할 목소리 타입을 선택하세요",
+            choices=["alloy", "verse", "nova", "shimmer", "copper", "amber"]
+        )
+    ):
+        edit_tts_type(voice)
+        await ctx.respond(f"✅ TTS 목소리가 `{voice}` 로 설정되었습니다")
+            
+    async def play_tts_worker(vc: discord.VoiceClient):
+        """큐에 쌓인 TTS를 순차적으로 재생하는 워커"""
+        global is_playing
+
+        if is_playing:  # 이미 워커 실행 중이면 중복 실행 방지
+            return
+
+        is_playing = True
+        while not tts_queue.empty():
+            text, voice_type, openai_token = await tts_queue.get()
+            try:
+                # ✅ OpenAI 클라이언트 초기화
+                client = OpenAI(api_key=openai_token)
+
+                # ✅ OpenAI TTS → 임시 파일 저장
+                tmp_path = "tts_temp.wav"
+                with client.audio.speech.with_streaming_response.create(
+                    model="gpt-4o-mini-tts",
+                    voice=voice_type,
+                    input=text
+                ) as response:
+                    response.stream_to_file(tmp_path)
+
+                # ✅ Discord 재생
+                done = asyncio.Event()
+
+                def after_play(err):
+                    done.set()
+
+                vc.play(discord.FFmpegPCMAudio(tmp_path), after=after_play)
+
+                # 끝날 때까지 대기
+                await done.wait()
+
+                # ✅ 임시 파일 삭제
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+
+            except Exception as e:
+                print(f"TTS 변환 실패: {e}")
+
+        is_playing = False
+
+
+    @bot.event
+    async def on_message(message: discord.Message):
+        global current_vc, tts_text_channel_id
+
+        if message.author.bot:
+            return
+        if current_vc is None:
+            return
+        if tts_text_channel_id is None or message.channel.id != tts_text_channel_id:
+            return
+        if not message.content or not message.content.strip():
+            return
+
+        # ✅ 텍스트 추출 (본문만)
+        text = message.content.strip()
+        voice_type = get_tts_type()
+
+        # ✅ 큐에 추가
+        await tts_queue.put((text, voice_type, openai_token))
+
+        # ✅ 워커 실행
+        await play_tts_worker(current_vc)
+
+        # ✅ slash 명령어 처리 유지
+        await bot.process_commands(message)

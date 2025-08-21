@@ -702,3 +702,47 @@ def insert_transaction(user_id: int, tx_type: str, amount: int, description: str
     conn.commit()
     cur.close()
     conn.close()
+
+
+def get_openai_token() -> str:
+    """DB에서 OpenAI Token 가져오기"""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT value FROM tts_setting WHERE key='token'")
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return row[0] if row else None
+
+
+def get_tts_type() -> str:
+    """DB에서 현재 TTS 목소리 타입 가져오기"""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT value FROM tts_setting WHERE key='type'")
+    row = cur.fetchone()
+
+    cur.close()
+    conn.close()
+
+    return row[0] if row else "alloy"   # 기본값 alloy
+
+
+def edit_tts_type(new_type: str) -> None:
+    """DB의 TTS 목소리 타입 변경"""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE tts_setting
+        SET value=%s
+        WHERE key='type'
+    """, (new_type,))
+
+    conn.commit()
+    cur.close()
+    conn.close()

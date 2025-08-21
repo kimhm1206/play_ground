@@ -15,7 +15,7 @@ from schedule import setup_scheduler
 intents = discord.Intents.default()
 intents.messages = True
 intents.guilds = True
-intents.message_content = False  # 이건 필요 없음, just info
+intents.message_content = True  # 이건 필요 없음, just info
 intents.members = True
 bot = commands.Bot(intents=intents)
 

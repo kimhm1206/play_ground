@@ -2,6 +2,7 @@ import discord
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timedelta
 from utils.function import get_connection, now_kst
+import pytz
 
 # ✅ 카지노 알림 채널 ID (전역)
 CASINO_ALERT_CHANNEL_ID = 1398040397338509443
@@ -198,6 +199,7 @@ async def force_repay_long_overdue(channel, conn, cur, today):
 def setup_scheduler(bot: discord.Client):
     """APScheduler 스케줄러 등록"""
     # ✅ 매일 00:01 실행
-    scheduler.add_job(daily_loan_check, 'cron', hour=0, minute=1, args=[bot])
+    seoul_tz = pytz.timezone("Asia/Seoul")
+    scheduler.add_job(daily_loan_check, 'cron', hour=0, minute=1, args=[bot],timezone=seoul_tz)
     scheduler.start()
     print("✅ APScheduler 스케줄러 시작됨 (매일 00:01 자동 실행)")
