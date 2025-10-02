@@ -58,6 +58,20 @@ async def on_member_remove(member: discord.Member):
         
         
         
+@bot.event
+async def on_member_join(member: discord.Member):
+    channel = bot.get_channel(1384416986926288909)
+    if not channel:
+        print("❌ 입장 로그 채널을 찾을 수 없습니다.")
+        return
+
+    display_name = member.global_name or member.display_name
+    await channel.send(
+        f"📥 {member.mention}({display_name}) 님이 서버에 들어왔습니다."
+    )
+
+
+
 register_slash_commands(bot)
 register_game_commands(bot)
 bot.run(get_token())
