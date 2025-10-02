@@ -24,7 +24,62 @@ tts_text_channel_id: int | None = None  # ✅ 읽을 텍스트 채널 ID 저장
 
 # 메인 봇 객체가 있는 곳에서 불러올 예정이므로 Cog 사용 X
 def register_slash_commands(bot: commands.Bot):
-    
+
+    async def send_avatar(
+        ctx: discord.ApplicationContext,
+        member: discord.Member,
+        size: int = 1024,
+    ) -> None:
+        avatar_url = member.display_avatar.replace(size=size).url
+        embed = discord.Embed(
+            title=f"🖼️ {member.display_name} 님의 프로필 사진",
+            description="이미지 크기는 옵션에서 조절할 수 있어요!",
+            color=discord.Color.blurple(),
+        )
+        embed.add_field(name="요청한 크기", value=f"{size}px", inline=True)
+        embed.set_image(url=avatar_url)
+        await ctx.respond(content=f"{member.mention} 님의 프로필 사진입니다.", embed=embed)
+
+    @bot.slash_command(
+        name="프로필사진",
+        description="선택한 멤버의 프로필 사진을 크게 보여줍니다.",
+    )
+    async def show_avatar(
+        ctx: discord.ApplicationContext,
+        member: discord.Member,
+        size: discord.Option(  # type: ignore
+            int,
+            "가져올 이미지 크기",
+            choices=[
+                discord.OptionChoice(name="256px", value=256),
+                discord.OptionChoice(name="512px", value=512),
+                discord.OptionChoice(name="1024px", value=1024),
+            ],
+            default=1024,
+        ),
+    ):
+        await send_avatar(ctx, member, size)
+
+    @bot.slash_command(
+        name="프사",
+        description="선택한 멤버의 프로필 사진을 크게 보여줍니다.",
+    )
+    async def show_avatar_shortcut(
+        ctx: discord.ApplicationContext,
+        member: discord.Member,
+        size: discord.Option(  # type: ignore
+            int,
+            "가져올 이미지 크기",
+            choices=[
+                discord.OptionChoice(name="256px", value=256),
+                discord.OptionChoice(name="512px", value=512),
+                discord.OptionChoice(name="1024px", value=1024),
+            ],
+            default=1024,
+        ),
+    ):
+        await send_avatar(ctx, member, size)
+
     @bot.slash_command(name="프로필", description="해당 유저의 프로필을 확인합니다.")
     async def show_profile(
         ctx: discord.ApplicationContext,

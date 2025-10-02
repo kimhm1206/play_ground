@@ -34,9 +34,9 @@ class InquiryTypeView(View):
     async def report_button(self, button: Button, interaction: discord.Interaction):
         await self.setup_ticket(interaction, "사건 신고")
 
-    @discord.ui.button(label="📘 규칙 문의", style=discord.ButtonStyle.primary)
+    @discord.ui.button(label="📘 문의&건의", style=discord.ButtonStyle.primary)
     async def rule_button(self, button: Button, interaction: discord.Interaction):
-        await self.setup_ticket(interaction, "규칙 문의")
+        await self.setup_ticket(interaction, "문의&건의")
 
     @discord.ui.button(label="💡 기능 문의", style=discord.ButtonStyle.success)
     async def feature_button(self, button: Button, interaction: discord.Interaction):
@@ -183,8 +183,8 @@ async def send_ticket_message(bot: commands.Bot):
             "무엇을 도와드릴까요?\n"
             "아래에서 문의 유형을 선택해주세요!\n\n"
             "📢 **사건 신고**: 서버 내 문제 상황을 알려주세요.\n"
-            "📘 **규칙 문의**: 서버 규칙에 대한 문의가 있어요.\n"
-            "💡 **기능 문의**: 디스코드 봇/기능 관련 건의사항을 남겨주세요."
+            "📘 **문의&건의**: 규칙 문의나 건의사항을 남겨주세요.\n"
+            "💡 **기능 문의**: 디스코드 봇/기능 관련 문의를 남겨주세요."
         ),
         color=discord.Color.blue()
     )
