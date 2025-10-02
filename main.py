@@ -40,34 +40,35 @@ async def on_ready():
     
 
 
-def get_display_name(member: discord.Member) -> str:
-    """멤버의 표시 이름을 통일된 방식으로 가져오기"""
-    return member.global_name or member.display_name or member.name
+def format_user(member: discord.Member, with_mention: bool = True) -> str:
+    """유저를 @mention(친추ID) 또는 닉네임(친추ID) 형식으로 변환"""
+    username = member.name  # 친추 가능한 아이디 (ex: xxmoly)
+    nickname = member.display_name  # 현재 서버에서의 닉네임
+
+    if with_mention:
+        return f"{member.mention}({username})"
+    else:
+        return f"{nickname}({username})"
+
+
+@bot.event
+async def on_member_join(member: discord.Member):
+    channel = bot.get_channel(1384416986926288909)
+    if channel:
+        await channel.send(f"📥 {format_user(member, with_mention=True)} 님이 서버에 들어왔습니다.")
 
 
 @bot.event
 async def on_member_remove(member: discord.Member):
     channel = bot.get_channel(1384416986926288909)
     if channel:
-        display_name = get_display_name(member)
-        await channel.send(f"📤 **{display_name}** 님이 서버에서 탈퇴했습니다.")
+        await channel.send(f"📤 {format_user(member, with_mention=False)} 님이 서버에서 탈퇴했습니다.")
 
     try:
         from utils.function import delete_profile
         delete_profile(member.id)
     except Exception as e:
         print(f"❌ 프로필 삭제 실패: {e}")
-
-
-@bot.event
-async def on_member_join(member: discord.Member):
-    channel = bot.get_channel(1384416986926288909)
-    if not channel:
-        print("❌ 입장 로그 채널을 찾을 수 없습니다.")
-        return
-
-    display_name = get_display_name(member)
-    await channel.send(f"📥 {member.mention}({display_name}) 님이 서버에 들어왔습니다.")
 
 register_slash_commands(bot)
 register_game_commands(bot)
