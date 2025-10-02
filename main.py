@@ -40,24 +40,25 @@ async def on_ready():
     
 
 
+def get_display_name(member: discord.Member) -> str:
+    """멤버의 표시 이름을 통일된 방식으로 가져오기"""
+    return member.global_name or member.display_name or member.name
+
+
 @bot.event
 async def on_member_remove(member: discord.Member):
-
-    # 1. 로그 채널 가져오기
     channel = bot.get_channel(1384416986926288909)
     if channel:
-        await channel.send(f"📤 **{member.name}** 님이 서버에서 탈퇴했습니다.")
+        display_name = get_display_name(member)
+        await channel.send(f"📤 **{display_name}** 님이 서버에서 탈퇴했습니다.")
 
-    # 2. DB에서 프로필 삭제
     try:
-        from utils.function import delete_profile  # 삭제 함수는 아래 참고
+        from utils.function import delete_profile
         delete_profile(member.id)
     except Exception as e:
         print(f"❌ 프로필 삭제 실패: {e}")
-        
-        
-        
-        
+
+
 @bot.event
 async def on_member_join(member: discord.Member):
     channel = bot.get_channel(1384416986926288909)
@@ -65,12 +66,8 @@ async def on_member_join(member: discord.Member):
         print("❌ 입장 로그 채널을 찾을 수 없습니다.")
         return
 
-    display_name = member.global_name or member.display_name
-    await channel.send(
-        f"📥 {member.mention}({display_name}) 님이 서버에 들어왔습니다."
-    )
-
-
+    display_name = get_display_name(member)
+    await channel.send(f"📥 {member.mention}({display_name}) 님이 서버에 들어왔습니다.")
 
 register_slash_commands(bot)
 register_game_commands(bot)
