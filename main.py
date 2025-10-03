@@ -46,14 +46,14 @@ def format_user(member: discord.Member, with_mention: bool = True) -> str:
     nickname = member.display_name  # 현재 서버에서의 닉네임
 
     if with_mention:
-        return f"{member.mention}({username})"
+        return f"{member.mention} ({username})"
     else:
-        return f"{nickname}({username})"
+        return f"{nickname} ({username})"
 
 
 @bot.event
 async def on_member_join(member: discord.Member):
-    channel = bot.get_channel(1384416986926288909)
+    channel = bot.get_channel(1411965966233112647)
     if channel:
         await channel.send(f"📥 {format_user(member, with_mention=True)} 님이 서버에 들어왔습니다.")
 
