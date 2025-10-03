@@ -55,7 +55,7 @@ def format_user(member: discord.Member, with_mention: bool = True) -> str:
 async def on_member_join(member: discord.Member):
     channel = bot.get_channel(1411965966233112647)
     if channel:
-        await channel.send(f"📥 {format_user(member, with_mention=True)} 님 반가워요!👋 [프로필설정] 채널에 가셔서 별명 변경과 멤버 등록을 하시고 자유로운 활동을 시작해보세요🐹")
+        await channel.send(f"📥 {format_user(member, with_mention=True)} 님 반가워요!👋\n[프로필설정] 채널에 가셔서 별명 변경과 멤버 등록을 하시고 자유로운 활동을 시작해보세요🐹")
 
 @bot.event
 async def on_member_remove(member: discord.Member):
