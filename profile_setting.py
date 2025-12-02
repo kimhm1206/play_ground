@@ -241,76 +241,39 @@ class IntroModal(discord.ui.Modal):
         self.new = new
         self.existing_data = existing_data or {}
 
-        
-        self.mbti = discord.ui.InputText(
-            label="MBTI (16종류, 영문 대문자 or 소문자)",
-            placeholder="예: INFP 또는 infp, 미공개",
-            required=True,
-            max_length=4,
-            value=self.existing_data.get("mbti", None)
-        )
         self.referral = discord.ui.InputText(
-            label="가입 경로 (지인 소개 시 닉네임 포함)",
-            placeholder="예: 디스보드, 친구추천(별명)",
+            label="가입 경로 & 목적",
+            placeholder="예: 디스보드, 친구추천(별명) / 친목, 게임 파티 구인", 
             required=True,
             value=self.existing_data.get("referral", None)
         )
-        self.bio = discord.ui.InputText(
-            label="간단 한줄 자기소개",
-            placeholder="예: 다양한 게임을 좋아하는 사람입니다!",
-            max_length=200,
-            required=True,
-            value=self.existing_data.get("bio", None)
-        )
 
-        self.add_item(self.mbti)
         self.add_item(self.referral)
-        self.add_item(self.bio)
 
     async def callback(self, interaction: discord.Interaction):
-        mbti_value = self.mbti.value.strip()
         referral = self.referral.value.strip()
-        
-        bio_value = self.bio.value.strip()
-
-        valid_mbti = {
-            'intj','intp','entj','entp','infj','infp','enfj','enfp',
-            'istj','isfj','estj','esfj','istp','isfp','estp','esfp', '미공개'
-        }
-
-        if mbti_value.lower() not in valid_mbti:
-            await interaction.response.send_message(
-                f"❌ `{mbti_value}` 는 올바른 MBTI 값이 아니에요!",
-                ephemeral=True, delete_after=5
-            )
-            return
-        
-        mbti_value = mbti_value.upper() if mbti_value.lower() != "미공개" else "미공개"
-        
 
         await interaction.response.send_message(
             embed=discord.Embed(
                 title=f"📝 {self.nickname} 프로필 설정 (2/2)",
-                description="✅ 기본 프로필 설정이 완료되었어요!\n\n🎮 마지막으로 게임 관련 질문들 몇 가지만 더 여쭤볼게요!",
+                description="✅ 기본 프로필 설정이 완료되었어요!\n\n🎮 마지막으로 게임 관련 정보를 알려주세요!",
                 color=discord.Color.blurple()
             ),
             view=GameModalConfirmView(
                 nickname=self.nickname,
                 user_id=self.user_id,
-                mbti=mbti_value,
                 referral=referral,
                 new=self.new,
-                existing_data={**self.existing_data, "bio": bio_value}
+                existing_data=self.existing_data
             ),
             ephemeral=True
         )
         
 class GameModalConfirmView(discord.ui.View):
-    def __init__(self, nickname, user_id, mbti, referral, new, existing_data):
+    def __init__(self, nickname, user_id, referral, new, existing_data):
         super().__init__(timeout=300)  # 5분 타임아웃
         self.nickname = nickname
         self.user_id = user_id
-        self.mbti = mbti
         self.referral = referral
         self.new = new
         self.existing_data = existing_data
@@ -320,7 +283,6 @@ class GameModalConfirmView(discord.ui.View):
         await interaction.response.send_modal(GameModal(
             nickname=self.nickname,
             user_id=self.user_id,
-            mbti=self.mbti,
             referral=self.referral,
             new=self.new,
             existing_data=self.existing_data
@@ -328,62 +290,39 @@ class GameModalConfirmView(discord.ui.View):
 
 
 class GameModal(discord.ui.Modal):
-    def __init__(self, nickname, user_id, mbti=None, referral=None, new=False, existing_data=None):
+    def __init__(self, nickname, user_id, referral=None, new=False, existing_data=None):
         super().__init__(title=f"📝 {nickname} 프로필 설정 (2/2)", custom_id=f"profile_modal_step2_{user_id}")
         self.nickname = nickname
         self.user_id = user_id
-        self.mbti = mbti
         self.referral = referral
         self.new = new
         self.existing_data = existing_data or {}
-        
+
         self.code = discord.ui.InputText(
             label="STEAM 친구코드",
-            placeholder="예: 숫자 또는 미공개",
-            required=True,
+            placeholder="예: 비작성시 미공개 처리",
+            required=False,
             value=self.existing_data.get("code", None)
         )
 
         self.games = discord.ui.InputText(
-            label="자주 하는 게임",
-            placeholder="예: 리그오브레전드, 오버워치",
-            max_length=100,
+            label="자주 하는 게임 & 선호 장르",
+            placeholder="예: 리그오브레전드, 오버워치 / AOS, FPS",
             required=False,
             value=self.existing_data.get("favorite_games", None)
-        )
-        self.wanted = discord.ui.InputText(
-            label="하고 싶은 게임",
-            placeholder="예: 세븐데이즈투다이, 마인크래프트",
-            max_length=100,
-            required=False,
-            value=self.existing_data.get("wanted_games", None)
         )
 
         self.add_item(self.code)
         self.add_item(self.games)
-        self.add_item(self.wanted)
 
     async def callback(self, interaction: discord.Interaction):
-        mbti_value = self.mbti.upper() if self.mbti.lower() != "미공개" else "미공개"
-        
         code_value = self.code.value.strip()
-        
-        if code_value.lower() != "미공개" and not code_value.isdigit():
-            await interaction.response.send_message(
-                f"❌ `{code_value}` 는 올바른 스팀 친구코드가 아니에요! (숫자만 입력하거나 '미공개'를 입력해주세요)",
-                ephemeral=True, delete_after=5
-            )
-            return
-        
         code_value = code_value or "미공개"
 
         save_profile(
             user_id=self.user_id,
-            mbti=mbti_value,
             favorite_games=self.games.value.strip(),
-            wanted_games=self.wanted.value.strip(),
             referral=self.referral,
-            bio=self.existing_data.get("bio", ""),  # bio는 이전 모달에서 받음
             code=code_value
         )
 
@@ -417,12 +356,9 @@ class GameModal(discord.ui.Modal):
                     description=f"{interaction.user.mention} 님의 프로필입니다:",
                     color=discord.Color.green()
                 )
-                embed.add_field(name="MBTI", value=f"**{mbti_value}**", inline=True)
                 embed.add_field(name="스팀 친구 코드", value=f"**{code_value}**", inline=True)
-                embed.add_field(name="자주 하는 게임", value=f"**{self.games.value.strip() or '없음'}**", inline=False)
-                embed.add_field(name="하고 싶은 게임", value=f"**{self.wanted.value.strip() or '없음'}**", inline=False)
-                embed.add_field(name="가입 경로", value=f"**{self.referral}**", inline=False)
-                embed.add_field(name="한줄 소개", value=f"``{self.existing_data.get('bio', '')}``", inline=False)
+                embed.add_field(name="자주 하는 게임 & 선호 장르", value=f"**{self.games.value.strip() or '없음'}**", inline=False)
+                embed.add_field(name="가입 경로 & 목적", value=f"**{self.referral or '없음'}**", inline=False)
                 embed.set_thumbnail(url=interaction.user.display_avatar.url)
 
-                await channel.send(content=f"🎊 새로운 맴버 **{interaction.user.mention}** 님이 들어오셨어요!", embed=embed)
+                await channel.send(content=f"🌟 새로운 멤버 **{interaction.user.mention}** 님의 프로필이에요.", embed=embed)

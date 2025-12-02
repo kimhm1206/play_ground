@@ -94,23 +94,20 @@ def register_slash_commands(bot: commands.Bot):
             title=f"📘 {member.display_name} 님의 프로필",
             color=discord.Color.blurple()
         )
-        mbti_value = profile['mbti']
-        if mbti_value and mbti_value.lower() != "미공개":
-            mbti_display = mbti_value.upper()
-        else:
-            mbti_display = mbti_value or "미공개"
 
-        embed.add_field(name="MBTI", value=f"**{mbti_display}**", inline=False)
         embed.add_field(name="스팀 친구 코드", value=f"**{profile['code'] or '미공개'}**", inline=True)
-        embed.add_field(name="자주 하는 게임", value=f"**{profile['favorite_games'] or '없음'}**", inline=False)
-        embed.add_field(name="하고 싶은 게임", value=f"**{profile['wanted_games'] or '없음'}**", inline=False)
-        embed.add_field(name="가입 경로", value=f"**{profile['referral']}**", inline=False)
-        embed.add_field(name="한줄 소개", value=f"``{profile['bio']}``", inline=False)
-        
+        embed.add_field(
+            name="자주 하는 게임 & 선호 장르",
+            value=f"**{profile['favorite_games'] or '없음'}**",
+            inline=False,
+        )
+        embed.add_field(
+            name="가입 경로 & 목적",
+            value=f"**{profile['referral'] or '없음'}**",
+            inline=False,
+        )
 
-        # embed.set_footer(text="프로필은 언제든지 수정할 수 있어요 ✨")
-
-        await ctx.respond(embed=embed)
+        await ctx.respond(content=f"🔍 {member.mention} 님의 프로필이에요.", embed=embed)
         
     
     @bot.slash_command(
