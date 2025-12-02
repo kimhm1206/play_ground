@@ -53,9 +53,20 @@ def format_user(member: discord.Member, with_mention: bool = True) -> str:
 
 @bot.event
 async def on_member_join(member: discord.Member):
-    channel = bot.get_channel(1411965966233112647)
-    if channel:
-        await channel.send(f"📥 {format_user(member, with_mention=True)} 님 반가워요!👋\n[프로필설정] 채널에 가셔서 별명 변경과 멤버 등록을 하시고\n자유로운 활동을 시작해보세요🐹")
+    welcome_message = (
+        f"📥 {format_user(member, with_mention=False)} 님 반가워요!👋\n"
+        "[프로필설정] 채널에 가셔서 별명 변경과 멤버 등록을 하시고\n"
+        "자유로운 활동을 시작해보세요🐹"
+    )
+
+    try:
+        await member.send(welcome_message)
+    except discord.Forbidden:
+        pass
+
+    log_channel = bot.get_channel(1384416986926288909)
+    if log_channel:
+        await log_channel.send(f"📥 {format_user(member, with_mention=False)} 님이 서버에 입장했습니다.")
 
 @bot.event
 async def on_member_remove(member: discord.Member):

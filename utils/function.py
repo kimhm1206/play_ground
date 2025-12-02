@@ -52,13 +52,28 @@ def get_token():
     finally:
         conn.close()
 
-def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str, referral: str, bio: str, code: str):
+def save_profile(
+    user_id: int,
+    favorite_games: str,
+    referral: str,
+    code: str,
+    mbti: str | None = None,
+    wanted_games: str | None = None,
+    bio: str | None = None,
+):
     """
     사용자 프로필 저장 또는 업데이트
     """
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
+        mbti_value = (mbti or "").strip()
+        favorite_games_value = (favorite_games or "").strip()
+        wanted_games_value = (wanted_games or "").strip()
+        referral_value = (referral or "").strip()
+        bio_value = (bio or "").strip()
+        code_value = (code or "미공개").strip()
 
         cursor.execute("""
             INSERT INTO user_profiles (user_id, mbti, favorite_games, wanted_games, referral, bio, code)
@@ -71,8 +86,16 @@ def save_profile(user_id: int, mbti: str, favorite_games: str, wanted_games: str
                 referral = EXCLUDED.referral,
                 bio = EXCLUDED.bio,
                 code = EXCLUDED.code;
-        """, (user_id, mbti.strip(), favorite_games.strip(), wanted_games.strip(), referral.strip(), bio.strip(),code.strip()))
-        
+        """, (
+            user_id,
+            mbti_value,
+            favorite_games_value,
+            wanted_games_value,
+            referral_value,
+            bio_value,
+            code_value,
+        ))
+
         cursor.execute("INSERT INTO voice_leaderboard (user_id) VALUES (%s) ON CONFLICT DO NOTHING;", (user_id,))
         conn.commit()
         return True
